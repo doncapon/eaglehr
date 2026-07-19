@@ -1,0 +1,10 @@
+{
+  "extends": "@eaglehr/config/typescript/base.json",
+  "compilerOptions": {
+    "module": "node16",
+    "moduleResolution": "node16",
+    "rootDir": "./prisma",
+    "outDir": "./dist"
+  },
+  "include": ["prisma/**/*.ts"]
+}

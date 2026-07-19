@@ -1,0 +1,30 @@
+{
+  "name": "@eaglehr/db",
+  "version": "0.0.0",
+  "private": true,
+  "main": "./generated/client/index.js",
+  "types": "./generated/client/index.d.ts",
+  "scripts": {
+    "db:generate": "prisma generate",
+    "migrate": "prisma migrate dev",
+    "migrate:deploy": "prisma migrate deploy",
+    "studio": "prisma studio",
+    "seed": "tsx prisma/seed.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.1.0",
+    "bcryptjs": "^2.4.3"
+  },
+  "devDependencies": {
+    "@eaglehr/config": "workspace:*",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^22.10.2",
+    "prisma": "^6.1.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-white text-gray-900 antialiased dark:bg-gray-950 dark:text-gray-100;
+}
+
+::selection {
+  @apply bg-brand-200 text-brand-900 dark:bg-brand-800 dark:text-brand-50;
+}

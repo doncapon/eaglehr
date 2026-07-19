@@ -1,0 +1,9 @@
+{
+  "extends": "@eaglehr/config/typescript/base.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "noEmit": true
+  },
+  "include": ["src/**/*.ts"]
+}

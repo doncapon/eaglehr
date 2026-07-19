@@ -1,0 +1,12 @@
+{
+  "extends": "@eaglehr/config/typescript/base.json",
+  "compilerOptions": {
+    "module": "node16",
+    "moduleResolution": "node16",
+    "declaration": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "noEmit": false
+  },
+  "include": ["src/**/*.ts"]
+}

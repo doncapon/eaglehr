@@ -1,0 +1,460 @@
+// EagleHR — MVP domain model (job board + billing).
+// Multi-tenancy is enforced at the NestJS guard layer via `organizationId`
+// on every org-scoped table, not Postgres RLS. RLS is a candidate hardening
+// step once sensitive HRIS/payroll data lands in a later phase.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum OrgRole {
+  OWNER
+  ADMIN
+  RECRUITER
+}
+
+enum OrgSize {
+  SIZE_1_10
+  SIZE_11_50
+  SIZE_51_200
+  SIZE_201_500
+  SIZE_500_PLUS
+}
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERNSHIP
+  TEMPORARY
+}
+
+enum WorkMode {
+  REMOTE
+  ONSITE
+  HYBRID
+}
+
+enum JobStatus {
+  DRAFT
+  PUBLISHED
+  CLOSED
+  ARCHIVED
+}
+
+enum ApplicationStatus {
+  APPLIED
+  SHORTLISTED
+  INTERVIEWING
+  OFFERED
+  HIRED
+  REJECTED
+  WITHDRAWN
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  REVOKED
+}
+
+enum VerificationStatus {
+  UNVERIFIED
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum OrganizationDocumentType {
+  CAC_CERTIFICATE
+  PROOF_OF_ADDRESS
+  REPRESENTATIVE_ID
+}
+
+enum BillingInterval {
+  MONTHLY
+  ANNUAL
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  EXPIRED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  ABANDONED
+}
+
+enum PaymentPurpose {
+  SUBSCRIPTION
+  JOB_BOOST
+  COMPANY_BOOST
+}
+
+enum NigeriaState {
+  ABIA
+  ADAMAWA
+  AKWA_IBOM
+  ANAMBRA
+  BAUCHI
+  BAYELSA
+  BENUE
+  BORNO
+  CROSS_RIVER
+  DELTA
+  EBONYI
+  EDO
+  EKITI
+  ENUGU
+  FCT_ABUJA
+  GOMBE
+  IMO
+  JIGAWA
+  KADUNA
+  KANO
+  KATSINA
+  KEBBI
+  KOGI
+  KWARA
+  LAGOS
+  NASARAWA
+  NIGER
+  OGUN
+  ONDO
+  OSUN
+  OYO
+  PLATEAU
+  RIVERS
+  SOKOTO
+  TARABA
+  YOBE
+  ZAMFARA
+}
+
+// ---------------------------------------------------------------------------
+// Identity
+// ---------------------------------------------------------------------------
+
+model User {
+  id              String   @id @default(uuid())
+  email           String   @unique
+  passwordHash    String
+  firstName       String
+  lastName        String
+  phone           String?
+  avatarUrl       String?
+  isEmailVerified Boolean  @default(false)
+  isPlatformAdmin Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  memberships             OrganizationMember[]
+  sentInvitations         OrganizationInvitation[] @relation("InvitedBy")
+  jobSeekerProfile        JobSeekerProfile?
+  createdJobs             Job[]
+  emailVerificationTokens EmailVerificationToken[]
+  passwordResetTokens     PasswordResetToken[]
+
+  @@map("users")
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("email_verification_tokens")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("password_reset_tokens")
+}
+
+// ---------------------------------------------------------------------------
+// Organizations (employer private accounts)
+// ---------------------------------------------------------------------------
+
+model Organization {
+  id                 String             @id @default(uuid())
+  name               String
+  slug               String             @unique
+  rcNumber           String? // CAC registration number
+  industry           String?
+  logoUrl            String?
+  websiteUrl         String?
+  size               OrgSize?
+  isBoosted          Boolean            @default(false)
+  boostExpiresAt     DateTime?
+  verificationStatus VerificationStatus @default(UNVERIFIED)
+  verificationNote   String?
+  verifiedAt         DateTime?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  members               OrganizationMember[]
+  invitations           OrganizationInvitation[]
+  jobs                  Job[]
+  subscriptions         Subscription[]
+  payments              Payment[]
+  verificationDocuments OrganizationVerificationDocument[]
+
+  @@map("organizations")
+}
+
+model OrganizationVerificationDocument {
+  id             String                   @id @default(uuid())
+  organizationId String
+  type           OrganizationDocumentType
+  fileUrl        String
+  uploadedAt     DateTime                 @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, type])
+  @@map("organization_verification_documents")
+}
+
+model OrganizationMember {
+  id             String   @id @default(uuid())
+  organizationId String
+  userId         String
+  role           OrgRole
+  joinedAt       DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+  @@map("organization_members")
+}
+
+model OrganizationInvitation {
+  id              String           @id @default(uuid())
+  organizationId  String
+  email           String
+  role            OrgRole
+  token           String           @unique
+  invitedByUserId String
+  status          InvitationStatus @default(PENDING)
+  expiresAt       DateTime
+  createdAt       DateTime         @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invitedBy    User         @relation("InvitedBy", fields: [invitedByUserId], references: [id])
+
+  @@index([organizationId])
+  @@map("organization_invitations")
+}
+
+// ---------------------------------------------------------------------------
+// Job seekers
+// ---------------------------------------------------------------------------
+
+model JobSeekerProfile {
+  id                     String             @id @default(uuid())
+  userId                 String             @unique
+  headline               String?
+  summary                String?
+  resumeUrl              String?
+  yearsOfExperience      Int?
+  currentState           NigeriaState?
+  currentCity            String?
+  desiredEmploymentTypes EmploymentType[]
+  desiredWorkMode        WorkMode?
+  expectedSalaryMinKobo  Int?
+  expectedSalaryMaxKobo  Int?
+  skills                 String[]
+  linkedinUrl            String?
+  portfolioUrl           String?
+  isOpenToWork           Boolean            @default(true)
+  nin                    String?
+  idDocumentUrl          String?
+  verificationStatus     VerificationStatus @default(UNVERIFIED)
+  verificationNote       String?
+  verifiedAt             DateTime?
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  applications Application[]
+
+  @@map("job_seeker_profiles")
+}
+
+// ---------------------------------------------------------------------------
+// Jobs + Applications
+// ---------------------------------------------------------------------------
+
+model Job {
+  id                  String         @id @default(uuid())
+  organizationId      String
+  createdByUserId     String
+  title               String
+  slug                String         @unique
+  description         String
+  responsibilities    String?
+  requirements        String?
+  employmentType      EmploymentType
+  workMode            WorkMode
+  state               NigeriaState
+  city                String
+  salaryMinKobo       Int?
+  salaryMaxKobo       Int?
+  salaryIsPublic      Boolean        @default(true)
+  currency            String         @default("NGN")
+  status              JobStatus      @default(DRAFT)
+  isBoosted           Boolean        @default(false)
+  boostExpiresAt      DateTime?
+  applicationDeadline DateTime?
+  publishedAt         DateTime?
+  viewCount           Int            @default(0)
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy    User          @relation(fields: [createdByUserId], references: [id])
+  applications Application[]
+  payments     Payment[]
+
+  @@index([organizationId])
+  @@index([status, publishedAt])
+  @@index([state, employmentType])
+  @@map("jobs")
+}
+
+model Application {
+  id                 String            @id @default(uuid())
+  jobId              String
+  jobSeekerProfileId String
+  status             ApplicationStatus @default(APPLIED)
+  coverLetter        String?
+  resumeUrlSnapshot  String?
+  expectedSalaryKobo Int?
+  appliedAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  job              Job              @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  jobSeekerProfile JobSeekerProfile @relation(fields: [jobSeekerProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, jobSeekerProfileId])
+  @@index([jobSeekerProfileId])
+  @@map("applications")
+}
+
+// ---------------------------------------------------------------------------
+// Billing (Paystack)
+// ---------------------------------------------------------------------------
+
+model Plan {
+  id              String          @id @default(uuid())
+  code            String          @unique // "starter" | "growth" | "scale"
+  name            String
+  description     String?
+  priceKobo       Int
+  billingInterval BillingInterval
+  maxActiveJobs   Int
+  maxTeamMembers  Int
+  features        String[]
+  isActive        Boolean         @default(true)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  subscriptions Subscription[]
+  payments      Payment[]
+
+  @@map("plans")
+}
+
+model Subscription {
+  id                       String             @id @default(uuid())
+  organizationId           String
+  planId                   String
+  status                   SubscriptionStatus @default(TRIALING)
+  paystackCustomerCode     String?
+  paystackSubscriptionCode String?
+  currentPeriodStart       DateTime?
+  currentPeriodEnd         DateTime?
+  cancelAtPeriodEnd        Boolean            @default(false)
+  canceledAt               DateTime?
+  createdAt                DateTime           @default(now())
+  updatedAt                DateTime           @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  plan         Plan         @relation(fields: [planId], references: [id])
+  payments     Payment[]
+
+  @@index([organizationId])
+  @@map("subscriptions")
+}
+
+model Payment {
+  id                    String         @id @default(uuid())
+  organizationId        String
+  subscriptionId        String?
+  planId                String?
+  jobId                 String?
+  paystackReference     String         @unique
+  paystackTransactionId BigInt?
+  amountKobo            Int
+  currency              String         @default("NGN")
+  status                PaymentStatus  @default(PENDING)
+  purpose               PaymentPurpose
+  rawWebhookPayload     Json?
+  paidAt                DateTime?
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  subscription Subscription? @relation(fields: [subscriptionId], references: [id])
+  plan         Plan?         @relation(fields: [planId], references: [id])
+  job          Job?          @relation(fields: [jobId], references: [id])
+
+  @@index([organizationId])
+  @@index([status])
+  @@map("payments")
+}
+
+// ---------------------------------------------------------------------------
+// Platform configuration (superadmin-editable)
+// ---------------------------------------------------------------------------
+
+model PlatformSettings {
+  id                String   @id @default("singleton")
+  boostPriceKobo    Int      @default(500000) // NGN 5,000
+  boostDurationDays Int      @default(7)
+  updatedAt         DateTime @updatedAt
+
+  @@map("platform_settings")
+}

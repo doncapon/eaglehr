@@ -1,0 +1,36 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# build outputs
+dist/
+.next/
+build/
+out/
+src-tauri/target/
+
+# turbo
+.turbo/
+
+# env
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# editor/os
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+
+# prisma
+packages/db/generated/
+
+# user-uploaded files (local-disk dev storage)
+apps/api/uploads/
