@@ -90,7 +90,7 @@ const jobSeekers: (SeedUser & {
   skills: string[];
 })[] = [
   {
-    email: " ",
+    email: "chidi.eze@gmail.com",
     firstName: "Chidi",
     lastName: "Eze",
     headline: "Backend Developer",
