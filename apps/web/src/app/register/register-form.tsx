@@ -18,6 +18,13 @@ export function RegisterForm() {
   const searchParams = useSearchParams();
   const next = searchParams.get("next") ?? "";
   const [accountType, setAccountType] = useState<AccountType>("jobseeker");
+  // Controlled so a failed submission (e.g. a validation error from the server) doesn't
+  // wipe out what the user typed — React resets uncontrolled inputs after a form action runs.
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [companyName, setCompanyName] = useState("");
 
   return (
     <AuthShell
@@ -91,20 +98,53 @@ export function RegisterForm() {
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="firstName">First name</Label>
-              <IconInput icon={User} id="firstName" name="firstName" required autoComplete="given-name" />
+              <IconInput
+                icon={User}
+                id="firstName"
+                name="firstName"
+                required
+                autoComplete="given-name"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+              />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="lastName">Last name</Label>
-              <Input id="lastName" name="lastName" required autoComplete="family-name" />
+              <Input
+                id="lastName"
+                name="lastName"
+                required
+                autoComplete="family-name"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+              />
             </div>
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="email">Email</Label>
-            <IconInput icon={Mail} id="email" name="email" type="email" required autoComplete="email" />
+            <IconInput
+              icon={Mail}
+              id="email"
+              name="email"
+              type="email"
+              required
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="phone">Phone (optional)</Label>
-            <IconInput icon={Phone} id="phone" name="phone" type="tel" autoComplete="tel" placeholder="+234..." />
+            <IconInput
+              icon={Phone}
+              id="phone"
+              name="phone"
+              type="tel"
+              autoComplete="tel"
+              placeholder="+234..."
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+            />
           </div>
           {accountType === "company" ? (
             <div className="flex flex-col gap-1.5">
@@ -116,6 +156,8 @@ export function RegisterForm() {
                 required
                 minLength={2}
                 placeholder="Acme Nigeria Ltd"
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
               />
             </div>
           ) : null}
