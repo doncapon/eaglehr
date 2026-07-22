@@ -7,7 +7,7 @@ import { PrismaService } from "../prisma/prisma.service";
 export class JobsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /** Lazily flips expired boosts back off — cheap enough to run before every public listing query. */
+  /** Lazily flips expired boosts back off — cheap enough to run alongside every public job listing query. */
   private async expireStaleBoosts() {
     await this.prisma.job.updateMany({
       where: { isBoosted: true, boostExpiresAt: { lt: new Date() } },
@@ -16,8 +16,6 @@ export class JobsService {
   }
 
   async publicList(query: JobQueryInput) {
-    await this.expireStaleBoosts();
-
     const where = {
       status: "PUBLISHED" as const,
       ...(query.state ? { state: query.state } : {}),
@@ -43,7 +41,11 @@ export class JobsService {
         : {}),
     };
 
-    const [items, total] = await Promise.all([
+    // Runs concurrently with the reads below rather than blocking them — a job whose boost
+    // expires in the same instant may sort as still-boosted for one more request, which is
+    // fine for a "lazily corrected" background cleanup.
+    const [, items, total] = await Promise.all([
+      this.expireStaleBoosts(),
       this.prisma.job.findMany({
         where,
         include: { organization: { select: { id: true, name: true, slug: true, logoUrl: true } } },
@@ -58,7 +60,7 @@ export class JobsService {
   }
 
   async publicSalaryRange() {
-    await this.expireStaleBoosts();
+    // Doesn't touch isBoosted, so no need to run the boost-expiry sweep here.
     const result = await this.prisma.job.aggregate({
       where: { status: "PUBLISHED", salaryIsPublic: true },
       _min: { salaryMinKobo: true },
@@ -71,7 +73,7 @@ export class JobsService {
   }
 
   async publicIndustries() {
-    await this.expireStaleBoosts();
+    // Doesn't touch isBoosted, so no need to run the boost-expiry sweep here.
     const rows = await this.prisma.job.findMany({
       where: { status: "PUBLISHED", organization: { industry: { not: null } } },
       select: { organization: { select: { industry: true } } },
