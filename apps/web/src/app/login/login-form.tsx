@@ -15,6 +15,7 @@ export function LoginForm() {
   const [state, formAction, isPending] = useActionState(loginAction, undefined);
   const searchParams = useSearchParams();
   const next = searchParams.get("next") ?? "";
+  const justRegistered = searchParams.get("registered") === "1";
   // Stale error/hint from a previous submission shouldn't linger once the user
   // starts editing again — clear it as soon as they retype either field.
   const [dirty, setDirty] = useState(false);
@@ -37,6 +38,11 @@ export function LoginForm() {
           <h1 className="text-3xl font-bold tracking-tight">Sign in</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">Welcome back to EagleHR.</p>
         </div>
+        {justRegistered ? (
+          <p className="rounded-md bg-brand-50 px-3 py-2 text-sm text-brand-700 dark:bg-brand-950 dark:text-brand-300">
+            Account created. Check your email to verify it, then sign in below.
+          </p>
+        ) : null}
         <form action={formAction} className="flex flex-col gap-4">
           <input type="hidden" name="next" value={next} />
           <div className="flex flex-col gap-1.5">

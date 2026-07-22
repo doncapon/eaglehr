@@ -42,10 +42,10 @@ export default async function VerifyEmailPage({ searchParams }: VerifyEmailPageP
           </>
         )}
         <Link
-          href="/verify"
+          href="/login"
           className="mt-2 rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-soft transition-all duration-200 ease-out-expo hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-lift"
         >
-          Continue
+          Continue to sign in
         </Link>
       </FadeInUp>
     </div>

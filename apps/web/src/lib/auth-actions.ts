@@ -3,7 +3,7 @@
 import { ForgotPasswordSchema, LoginSchema, RegisterSchema, ResetPasswordSchema } from "@eaglehr/types";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { apiFetch, ApiError, publicApiFetch } from "./api";
+import { ApiError, publicApiFetch } from "./api";
 import { ACCESS_COOKIE, REFRESH_COOKIE } from "./cookies";
 
 export interface AuthFormState {
@@ -77,24 +77,29 @@ export async function registerAction(_prevState: AuthFormState | undefined, form
     return { error: "Please enter your company name." };
   }
 
+  let tokens: AuthTokens;
   try {
-    const tokens = await publicApiFetch<AuthTokens>("/auth/register", { method: "POST", body: parsed.data });
-    await setAuthCookies(tokens);
+    tokens = await publicApiFetch<AuthTokens>("/auth/register", { method: "POST", body: parsed.data });
   } catch (err) {
     return { error: err instanceof ApiError ? err.message : "Registration failed. Please try again." };
   }
 
   if (isCompanyAccount && typeof companyName === "string") {
     try {
-      await apiFetch("/organizations", { method: "POST", body: { name: companyName.trim() } });
+      // Uses the freshly issued token directly (not a cookie) — registering doesn't
+      // start a browser session, so there's nothing in the cookie jar for apiFetch to read yet.
+      await publicApiFetch("/organizations", {
+        method: "POST",
+        body: { name: companyName.trim() },
+        token: tokens.accessToken,
+      });
     } catch {
-      // Account was created successfully either way — they can set up the company from /verify or the dashboard.
+      // Account was created successfully either way — they can set up the company after signing in.
     }
   }
 
-  // Every new account lands on the verification center first — confirm email,
-  // then submit identity (job seeker) or company documents (employer) for review.
-  redirect("/verify");
+  // Registration no longer signs the user in — they confirm their email and log in explicitly.
+  redirect("/login?registered=1");
 }
 
 export async function loginAction(_prevState: AuthFormState | undefined, formData: FormData): Promise<AuthFormState> {
