@@ -35,18 +35,30 @@ interface CountResponse {
   total: number;
 }
 
-interface IndustryCount {
-  industry: string;
+interface FilterCount {
+  value: string;
   count: number;
 }
 
+interface FilterFacets {
+  employmentType: FilterCount[];
+  workMode: FilterCount[];
+  state: FilterCount[];
+  industry: FilterCount[];
+}
+
 async function getStats() {
-  const [jobs, companies, industries] = await Promise.all([
+  const [jobs, companies, facets] = await Promise.all([
     publicApiFetch<CountResponse>("/jobs?limit=1").catch(() => ({ total: 0 })),
     publicApiFetch<CountResponse>("/companies?limit=1").catch(() => ({ total: 0 })),
-    publicApiFetch<IndustryCount[]>("/jobs/industries").catch(() => []),
+    publicApiFetch<FilterFacets>("/jobs/filter-facets").catch(() => ({
+      employmentType: [],
+      workMode: [],
+      state: [],
+      industry: [],
+    })),
   ]);
-  return { jobTotal: jobs.total, companyTotal: companies.total, industries: industries.slice(0, 8) };
+  return { jobTotal: jobs.total, companyTotal: companies.total, industries: facets.industry.slice(0, 8) };
 }
 
 export default async function HomePage() {
@@ -151,12 +163,12 @@ export default async function HomePage() {
           <div className="flex flex-wrap items-center justify-center gap-3">
             {industries.map((industry, index) => (
               <Link
-                key={industry.industry}
-                href={`/jobs?industry=${encodeURIComponent(industry.industry)}`}
+                key={industry.value}
+                href={`/jobs?industry=${encodeURIComponent(industry.value)}`}
                 className="group relative overflow-hidden rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-soft transition-all duration-200 ease-out-expo hover:-translate-y-0.5 hover:border-brand-300 hover:text-brand-700 hover:shadow-glow dark:border-gray-800 dark:bg-gray-950 dark:text-gray-300 dark:hover:text-brand-400"
                 style={{ animationDelay: `${index * 60}ms` }}
               >
-                {industry.industry}
+                {industry.value}
                 <span className="ml-1.5 text-xs text-gray-400 group-hover:text-brand-500 dark:text-gray-600">
                   {industry.count}
                 </span>

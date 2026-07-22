@@ -1,9 +1,9 @@
 import { z } from "zod";
-import { OrgRoleSchema, OrgSizeSchema } from "./enums";
+import { OrgIndustrySchema, OrgRoleSchema, OrgSizeSchema } from "./enums";
 
 export const CreateOrganizationSchema = z.object({
   name: z.string().min(2),
-  industry: z.string().optional(),
+  industry: OrgIndustrySchema.optional(),
   size: OrgSizeSchema.optional(),
   websiteUrl: z.string().url().optional(),
   rcNumber: z.string().optional(),

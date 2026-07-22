@@ -47,9 +47,16 @@ interface SalaryRange {
   maxKobo: number;
 }
 
-interface IndustryCount {
-  industry: string;
+interface FilterCount {
+  value: string;
   count: number;
+}
+
+interface FilterFacets {
+  employmentType: FilterCount[];
+  workMode: FilterCount[];
+  state: FilterCount[];
+  industry: FilterCount[];
 }
 
 export const revalidate = 60;
@@ -87,10 +94,10 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
   if (maxSalaryKobo !== undefined) query.set("maxSalaryKobo", String(maxSalaryKobo));
   if (params.page) query.set("page", params.page);
 
-  const [{ items, total, page, limit }, salaryRange, industries] = await Promise.all([
+  const [{ items, total, page, limit }, salaryRange, facets] = await Promise.all([
     publicApiFetch<JobListResponse>(`/jobs?${query.toString()}`),
     publicApiFetch<SalaryRange>("/jobs/salary-range"),
-    publicApiFetch<IndustryCount[]>("/jobs/industries"),
+    publicApiFetch<FilterFacets>("/jobs/filter-facets"),
   ]);
   const totalPages = Math.max(1, Math.ceil(total / limit));
   const hasActiveFilters = Boolean(
@@ -127,7 +134,7 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
           employmentType={employmentType}
           workMode={workMode}
           industry={industry}
-          industries={industries}
+          facets={facets}
           minSalary={params.minSalary}
           maxSalary={params.maxSalary}
           salaryFloor={Math.floor(salaryRange.minKobo / 100)}

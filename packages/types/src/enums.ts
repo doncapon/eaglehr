@@ -20,6 +20,30 @@ export const ORG_SIZE_LABELS: Record<OrgSize, string> = {
   SIZE_500_PLUS: "500+ employees",
 };
 
+// Values double as the stored/display strings (matches how existing seeded
+// organizations already store their industry), so no separate code/label map.
+export const ORG_INDUSTRIES = [
+  "FMCG",
+  "Fintech",
+  "Banking",
+  "Logistics",
+  "Oil & Gas",
+  "Healthtech",
+  "Fashion & Retail",
+  "Agriculture",
+  "Real Estate",
+  "Edtech",
+  "Telecoms",
+  "Construction",
+  "Manufacturing",
+  "Professional Services",
+  "Hospitality & Travel",
+  "Media & Entertainment",
+  "Other",
+] as const;
+export const OrgIndustrySchema = z.enum(ORG_INDUSTRIES);
+export type OrgIndustry = z.infer<typeof OrgIndustrySchema>;
+
 export const EMPLOYMENT_TYPES = ["FULL_TIME", "PART_TIME", "CONTRACT", "INTERNSHIP", "TEMPORARY"] as const;
 export const EmploymentTypeSchema = z.enum(EMPLOYMENT_TYPES);
 export type EmploymentType = z.infer<typeof EmploymentTypeSchema>;

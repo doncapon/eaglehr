@@ -1,5 +1,6 @@
 "use client";
 
+import { ORG_INDUSTRIES } from "@eaglehr/types";
 import { Button, Input, Label, cn } from "@eaglehr/ui";
 import { Briefcase, Building2, Mail, Phone, User } from "lucide-react";
 import Link from "next/link";
@@ -25,6 +26,7 @@ export function RegisterForm() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [companyName, setCompanyName] = useState("");
+  const [industry, setIndustry] = useState("");
 
   return (
     <AuthShell
@@ -147,19 +149,41 @@ export function RegisterForm() {
             />
           </div>
           {accountType === "company" ? (
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="companyName">Company name</Label>
-              <IconInput
-                icon={Building2}
-                id="companyName"
-                name="companyName"
-                required
-                minLength={2}
-                placeholder="Acme Nigeria Ltd"
-                value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
-              />
-            </div>
+            <>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="companyName">Company name</Label>
+                <IconInput
+                  icon={Building2}
+                  id="companyName"
+                  name="companyName"
+                  required
+                  minLength={2}
+                  placeholder="Acme Nigeria Ltd"
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="industry">Industry</Label>
+                <select
+                  id="industry"
+                  name="industry"
+                  required
+                  value={industry}
+                  onChange={(e) => setIndustry(e.target.value)}
+                  className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm transition-colors focus:border-brand-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900"
+                >
+                  <option value="" disabled>
+                    Select your industry
+                  </option>
+                  {ORG_INDUSTRIES.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </>
           ) : null}
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="password">Password</Label>

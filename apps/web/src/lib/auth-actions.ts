@@ -1,6 +1,6 @@
 "use server";
 
-import { ForgotPasswordSchema, LoginSchema, RegisterSchema, ResetPasswordSchema } from "@eaglehr/types";
+import { ForgotPasswordSchema, LoginSchema, OrgIndustrySchema, RegisterSchema, ResetPasswordSchema } from "@eaglehr/types";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { ApiError, publicApiFetch } from "./api";
@@ -76,6 +76,10 @@ export async function registerAction(_prevState: AuthFormState | undefined, form
   if (isCompanyAccount && (typeof companyName !== "string" || companyName.trim().length < 2)) {
     return { error: "Please enter your company name." };
   }
+  const industry = formData.get("industry");
+  if (isCompanyAccount && !OrgIndustrySchema.safeParse(industry).success) {
+    return { error: "Please select your industry." };
+  }
 
   let tokens: AuthTokens;
   try {
@@ -90,7 +94,7 @@ export async function registerAction(_prevState: AuthFormState | undefined, form
       // start a browser session, so there's nothing in the cookie jar for apiFetch to read yet.
       await publicApiFetch("/organizations", {
         method: "POST",
-        body: { name: companyName.trim() },
+        body: { name: companyName.trim(), industry },
         token: tokens.accessToken,
       });
     } catch {

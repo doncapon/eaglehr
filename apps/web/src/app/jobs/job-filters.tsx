@@ -4,9 +4,16 @@ import { EMPLOYMENT_TYPES, NIGERIA_STATE_LABELS, NIGERIA_STATES, WORK_MODES } fr
 import Link from "next/link";
 import type { FormEvent } from "react";
 
-interface IndustryCount {
-  industry: string;
+interface FilterCount {
+  value: string;
   count: number;
+}
+
+interface FilterFacets {
+  employmentType: FilterCount[];
+  workMode: FilterCount[];
+  state: FilterCount[];
+  industry: FilterCount[];
 }
 
 interface JobFiltersProps {
@@ -15,7 +22,7 @@ interface JobFiltersProps {
   employmentType: string[];
   workMode: string[];
   industry: string[];
-  industries: IndustryCount[];
+  facets: FilterFacets;
   minSalary?: string;
   maxSalary?: string;
   salaryFloor: number;
@@ -27,19 +34,27 @@ function submitOnChange(event: FormEvent<HTMLInputElement | HTMLSelectElement>) 
   event.currentTarget.form?.requestSubmit();
 }
 
+function countsByValue(counts: FilterCount[]): Map<string, number> {
+  return new Map(counts.map(({ value, count }) => [value, count]));
+}
+
 export function JobFilters({
   q,
   state,
   employmentType,
   workMode,
   industry,
-  industries,
+  facets,
   minSalary,
   maxSalary,
   salaryFloor,
   salaryCeiling,
   hasActiveFilters,
 }: JobFiltersProps) {
+  const employmentTypeCounts = countsByValue(facets.employmentType);
+  const workModeCounts = countsByValue(facets.workMode);
+  const stateCounts = countsByValue(facets.state);
+
   return (
     <form method="get" className="flex flex-col gap-6">
       <div className="flex flex-col gap-1.5">
@@ -60,16 +75,22 @@ export function JobFilters({
           Employment type
         </legend>
         {EMPLOYMENT_TYPES.map((type) => (
-          <label key={type} className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-            <input
-              type="checkbox"
-              name="employmentType"
-              value={type}
-              defaultChecked={employmentType.includes(type)}
-              onChange={submitOnChange}
-              className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800"
-            />
-            {type.replace("_", " ")}
+          <label
+            key={type}
+            className="flex items-center justify-between gap-2 text-sm text-gray-700 dark:text-gray-300"
+          >
+            <span className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                name="employmentType"
+                value={type}
+                defaultChecked={employmentType.includes(type)}
+                onChange={submitOnChange}
+                className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800"
+              />
+              {type.replace("_", " ")}
+            </span>
+            <span className="text-xs text-gray-400 dark:text-gray-500">{employmentTypeCounts.get(type) ?? 0}</span>
           </label>
         ))}
       </fieldset>
@@ -79,26 +100,32 @@ export function JobFilters({
           Work mode
         </legend>
         {WORK_MODES.map((mode) => (
-          <label key={mode} className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-            <input
-              type="checkbox"
-              name="workMode"
-              value={mode}
-              defaultChecked={workMode.includes(mode)}
-              onChange={submitOnChange}
-              className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800"
-            />
-            {mode}
+          <label
+            key={mode}
+            className="flex items-center justify-between gap-2 text-sm text-gray-700 dark:text-gray-300"
+          >
+            <span className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                name="workMode"
+                value={mode}
+                defaultChecked={workMode.includes(mode)}
+                onChange={submitOnChange}
+                className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800"
+              />
+              {mode}
+            </span>
+            <span className="text-xs text-gray-400 dark:text-gray-500">{workModeCounts.get(mode) ?? 0}</span>
           </label>
         ))}
       </fieldset>
 
-      {industries.length > 0 ? (
+      {facets.industry.length > 0 ? (
         <fieldset className="flex flex-col gap-2">
           <legend className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
             Sector
           </legend>
-          {industries.map(({ industry: value, count }) => (
+          {facets.industry.map(({ value, count }) => (
             <label key={value} className="flex items-center justify-between gap-2 text-sm text-gray-700 dark:text-gray-300">
               <span className="flex items-center gap-2">
                 <input
@@ -160,7 +187,7 @@ export function JobFilters({
           <option value="">All states</option>
           {NIGERIA_STATES.map((stateOption) => (
             <option key={stateOption} value={stateOption}>
-              {NIGERIA_STATE_LABELS[stateOption]}
+              {NIGERIA_STATE_LABELS[stateOption]} ({stateCounts.get(stateOption) ?? 0})
             </option>
           ))}
         </select>

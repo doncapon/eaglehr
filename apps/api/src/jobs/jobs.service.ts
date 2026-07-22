@@ -72,21 +72,35 @@ export class JobsService {
     };
   }
 
-  async publicIndustries() {
-    // Doesn't touch isBoosted, so no need to run the boost-expiry sweep here.
-    const rows = await this.prisma.job.findMany({
-      where: { status: "PUBLISHED", organization: { industry: { not: null } } },
-      select: { organization: { select: { industry: true } } },
-    });
-    const counts = new Map<string, number>();
-    for (const row of rows) {
+  /** Job counts per value for every public filter — powers the counts shown next to each filter option. */
+  async publicFilterFacets() {
+    // Doesn't touch isBoosted, so no need to run the boost-expiry sweep here. Counts are
+    // over all published jobs regardless of other active filters (not a faceted narrowing).
+    const [employmentTypeGroups, workModeGroups, stateGroups, industryRows] = await Promise.all([
+      this.prisma.job.groupBy({ by: ["employmentType"], where: { status: "PUBLISHED" }, _count: { _all: true } }),
+      this.prisma.job.groupBy({ by: ["workMode"], where: { status: "PUBLISHED" }, _count: { _all: true } }),
+      this.prisma.job.groupBy({ by: ["state"], where: { status: "PUBLISHED" }, _count: { _all: true } }),
+      this.prisma.job.findMany({
+        where: { status: "PUBLISHED", organization: { industry: { not: null } } },
+        select: { organization: { select: { industry: true } } },
+      }),
+    ]);
+
+    const industryCounts = new Map<string, number>();
+    for (const row of industryRows) {
       const industry = row.organization.industry;
       if (!industry) continue;
-      counts.set(industry, (counts.get(industry) ?? 0) + 1);
+      industryCounts.set(industry, (industryCounts.get(industry) ?? 0) + 1);
     }
-    return [...counts.entries()]
-      .map(([industry, count]) => ({ industry, count }))
-      .sort((a, b) => a.industry.localeCompare(b.industry));
+
+    return {
+      employmentType: employmentTypeGroups.map((g) => ({ value: g.employmentType, count: g._count._all })),
+      workMode: workModeGroups.map((g) => ({ value: g.workMode, count: g._count._all })),
+      state: stateGroups.map((g) => ({ value: g.state, count: g._count._all })),
+      industry: [...industryCounts.entries()]
+        .map(([value, count]) => ({ value, count }))
+        .sort((a, b) => a.value.localeCompare(b.value)),
+    };
   }
 
   async publicFindBySlugOrId(slugOrId: string) {

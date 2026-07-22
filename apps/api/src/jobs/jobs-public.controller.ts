@@ -21,9 +21,9 @@ export class JobsPublicController {
   }
 
   @Public()
-  @Get("industries")
-  industries() {
-    return this.jobsService.publicIndustries();
+  @Get("filter-facets")
+  filterFacets() {
+    return this.jobsService.publicFilterFacets();
   }
 
   @Public()
