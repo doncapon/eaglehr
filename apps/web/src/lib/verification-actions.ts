@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { apiFetch, apiFetchFormData, ApiError } from "./api";
+import { apiFetch, apiFetchFormData, ApiError, friendlyUploadError } from "./api";
 import type { ActionState } from "./organization-actions";
 
 export async function resendVerificationEmailAction(): Promise<ActionState> {
@@ -34,7 +34,7 @@ export async function submitJobSeekerVerificationAction(
   try {
     await apiFetchFormData("/me/profile/verification", forward);
   } catch (err) {
-    return { error: err instanceof ApiError ? err.message : "Failed to submit verification." };
+    return { error: friendlyUploadError(err, "Failed to submit verification.") };
   }
 
   revalidatePath("/verify");
@@ -58,7 +58,7 @@ export async function uploadOrganizationDocumentAction(
   try {
     await apiFetchFormData(`/organizations/${organizationId}/verification/documents/${type}`, forward);
   } catch (err) {
-    return { error: err instanceof ApiError ? err.message : "Failed to upload document." };
+    return { error: friendlyUploadError(err, "Failed to upload document.") };
   }
 
   revalidatePath("/verify");

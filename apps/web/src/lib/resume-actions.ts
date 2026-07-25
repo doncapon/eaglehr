@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { apiFetchFormData, ApiError } from "./api";
+import { apiFetchFormData, friendlyUploadError } from "./api";
 import type { ActionState } from "./organization-actions";
 
 export async function uploadResumeAction(
@@ -19,7 +19,7 @@ export async function uploadResumeAction(
   try {
     await apiFetchFormData("/me/profile/resume", forward);
   } catch (err) {
-    return { error: err instanceof ApiError ? err.message : "Failed to upload resume." };
+    return { error: friendlyUploadError(err, "Failed to upload resume.") };
   }
 
   revalidatePath("/profile");

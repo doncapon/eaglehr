@@ -78,6 +78,24 @@ export async function publicApiFetch<T>(path: string, options?: RequestOptions):
 }
 
 /**
+ * Turns a caught upload error into copy that's safe to show a user. A 413 gets
+ * a specific "too large" message regardless of what the rejecting layer (our API,
+ * or an infra proxy in front of it) put in the body. Anything that doesn't look
+ * like a clean, short, human-written message (HTML tags, unusually long) falls
+ * back too, rather than risk surfacing a raw proxy error page.
+ */
+export function friendlyUploadError(err: unknown, fallback: string): string {
+  if (!(err instanceof ApiError)) return fallback;
+  if (err.status === 413) {
+    return "That file is too large. Please upload a smaller file and try again.";
+  }
+  if (!err.message || err.message.includes("<") || err.message.length > 150) {
+    return fallback;
+  }
+  return err.message;
+}
+
+/**
  * Authenticated multipart/form-data upload. Deliberately bypasses `request()` —
  * FormData bodies must not be JSON.stringify'd, and fetch needs to set its own
  * `Content-Type` (with the multipart boundary) rather than the JSON one.
