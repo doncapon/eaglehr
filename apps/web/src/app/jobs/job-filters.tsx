@@ -1,7 +1,6 @@
 "use client";
 
 import { EMPLOYMENT_TYPES, NIGERIA_STATE_LABELS, NIGERIA_STATES, WORK_MODES } from "@eaglehr/types";
-import Link from "next/link";
 import type { FormEvent } from "react";
 
 interface FilterCount {
@@ -16,7 +15,7 @@ interface FilterFacets {
   industry: FilterCount[];
 }
 
-interface JobFiltersProps {
+export interface JobFiltersProps {
   q?: string;
   state?: string;
   employmentType: string[];
@@ -28,14 +27,21 @@ interface JobFiltersProps {
   salaryFloor: number;
   salaryCeiling: number;
   hasActiveFilters: boolean;
-}
-
-function submitOnChange(event: FormEvent<HTMLInputElement | HTMLSelectElement>) {
-  event.currentTarget.form?.requestSubmit();
+  onNavigate: (params: URLSearchParams) => void;
+  isPending: boolean;
 }
 
 function countsByValue(counts: FilterCount[]): Map<string, number> {
   return new Map(counts.map(({ value, count }) => [value, count]));
+}
+
+/** Builds a query string from the form's current field values, dropping empty ones. */
+function paramsFromForm(form: HTMLFormElement): URLSearchParams {
+  const params = new URLSearchParams();
+  for (const [key, value] of new FormData(form).entries()) {
+    if (typeof value === "string" && value !== "") params.append(key, value);
+  }
+  return params;
 }
 
 export function JobFilters({
@@ -50,13 +56,31 @@ export function JobFilters({
   salaryFloor,
   salaryCeiling,
   hasActiveFilters,
+  onNavigate,
+  isPending,
 }: JobFiltersProps) {
   const employmentTypeCounts = countsByValue(facets.employmentType);
   const workModeCounts = countsByValue(facets.workMode);
   const stateCounts = countsByValue(facets.state);
 
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    onNavigate(paramsFromForm(event.currentTarget));
+  }
+
+  // Checkboxes/selects apply immediately on change, same as before — just via a
+  // client-side transition now instead of a full-page form submission.
+  function handleFieldChange(event: FormEvent<HTMLInputElement | HTMLSelectElement>) {
+    const form = event.currentTarget.form;
+    if (form) onNavigate(paramsFromForm(form));
+  }
+
+  function handleClear() {
+    onNavigate(new URLSearchParams());
+  }
+
   return (
-    <form method="get" className="flex flex-col gap-6">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       <div className="flex flex-col gap-1.5">
         <label htmlFor="q" className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
           Search
@@ -85,7 +109,7 @@ export function JobFilters({
                 name="employmentType"
                 value={type}
                 defaultChecked={employmentType.includes(type)}
-                onChange={submitOnChange}
+                onChange={handleFieldChange}
                 className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800"
               />
               {type.replace("_", " ")}
@@ -110,7 +134,7 @@ export function JobFilters({
                 name="workMode"
                 value={mode}
                 defaultChecked={workMode.includes(mode)}
-                onChange={submitOnChange}
+                onChange={handleFieldChange}
                 className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800"
               />
               {mode}
@@ -133,7 +157,7 @@ export function JobFilters({
                   name="industry"
                   value={value}
                   defaultChecked={industry.includes(value)}
-                  onChange={submitOnChange}
+                  onChange={handleFieldChange}
                   className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800"
                 />
                 {value}
@@ -181,7 +205,7 @@ export function JobFilters({
           id="state"
           name="state"
           defaultValue={state ?? ""}
-          onChange={submitOnChange}
+          onChange={handleFieldChange}
           className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm transition-colors focus:border-brand-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900"
         >
           <option value="">All states</option>
@@ -195,14 +219,19 @@ export function JobFilters({
 
       <button
         type="submit"
-        className="h-10 rounded-md bg-brand-600 text-sm font-medium text-white shadow-soft transition-all duration-200 ease-out-expo hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-lift active:scale-[0.97]"
+        disabled={isPending}
+        className="h-10 rounded-md bg-brand-600 text-sm font-medium text-white shadow-soft transition-all duration-200 ease-out-expo hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-lift active:scale-[0.97] disabled:pointer-events-none disabled:opacity-70"
       >
-        Apply filters
+        {isPending ? "Applying..." : "Apply filters"}
       </button>
       {hasActiveFilters ? (
-        <Link href="/jobs" className="text-center text-sm text-gray-500 hover:text-brand-600 dark:text-gray-400 dark:hover:text-brand-400">
+        <button
+          type="button"
+          onClick={handleClear}
+          className="text-center text-sm text-gray-500 hover:text-brand-600 dark:text-gray-400 dark:hover:text-brand-400"
+        >
           Clear all filters
-        </Link>
+        </button>
       ) : null}
     </form>
   );
