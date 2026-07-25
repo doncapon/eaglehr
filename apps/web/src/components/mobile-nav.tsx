@@ -4,7 +4,7 @@ import { Button } from "@eaglehr/ui";
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { logoutAction } from "@/lib/auth-actions";
 
 interface MobileNavUser {
@@ -17,6 +17,7 @@ const linkClass =
 export function MobileNav({ user }: { user: MobileNavUser | null }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Route changes don't remount the header (it lives in the root layout), so the
   // menu has to be closed explicitly once a link navigation actually happens.
@@ -24,8 +25,19 @@ export function MobileNav({ user }: { user: MobileNavUser | null }) {
     setOpen(false);
   }, [pathname]);
 
+  useEffect(() => {
+    if (!open) return;
+    function handlePointerDown(event: PointerEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [open]);
+
   return (
-    <div className="md:hidden">
+    <div ref={containerRef} className="md:hidden">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
