@@ -2,7 +2,7 @@
 
 import { cn } from "@eaglehr/ui";
 import { useRouter } from "next/navigation";
-import { useTransition, type ReactNode } from "react";
+import { useRef, useTransition, type ReactNode } from "react";
 import { JobFilters, type JobFiltersProps } from "./job-filters";
 
 interface JobsFilterShellProps extends Omit<JobFiltersProps, "onNavigate" | "isPending"> {
@@ -12,12 +12,16 @@ interface JobsFilterShellProps extends Omit<JobFiltersProps, "onNavigate" | "isP
 export function JobsFilterShell({ children, ...filterProps }: JobsFilterShellProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const resultsRef = useRef<HTMLDivElement>(null);
 
   function navigate(params: URLSearchParams) {
     const qs = params.toString();
     startTransition(() => {
       router.push(qs ? `/jobs?${qs}` : "/jobs", { scroll: false });
     });
+    // Filter controls near the bottom of a long sidebar (mobile especially) can leave
+    // the results scrolled out of view — bring them back in, no-op if already visible.
+    resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
 
   return (
@@ -29,7 +33,10 @@ export function JobsFilterShell({ children, ...filterProps }: JobsFilterShellPro
 
       {/* Old results stay visible (dimmed) while the new page streams in, instead of
           the native form-GET full-page navigation that used to blank the screen first. */}
-      <div className={cn("flex-1 transition-opacity duration-150", isPending && "pointer-events-none opacity-50")}>
+      <div
+        ref={resultsRef}
+        className={cn("flex-1 scroll-mt-24 transition-opacity duration-150", isPending && "pointer-events-none opacity-50")}
+      >
         {children}
       </div>
     </div>
