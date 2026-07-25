@@ -3,7 +3,7 @@ import { Feather } from "lucide-react";
 import Link from "next/link";
 import { logoutAction } from "@/lib/auth-actions";
 import { MobileNav } from "@/components/mobile-nav";
-import { getCurrentUser } from "@/lib/session";
+import { getCurrentUser, getMyOrganizations } from "@/lib/session";
 
 function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
@@ -16,6 +16,9 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
 
 export async function SiteHeader() {
   const user = await getCurrentUser();
+  // Employers manage jobs via their org dashboard; the applications tracker is
+  // only meaningful for the job-seeker side (no organizations of their own).
+  const isJobSeeker = user ? (await getMyOrganizations()).length === 0 : false;
 
   return (
     <header className="sticky top-0 z-40 border-b border-gray-200/80 bg-white/80 backdrop-blur-md dark:border-gray-800/80 dark:bg-gray-950/80">
@@ -32,6 +35,7 @@ export async function SiteHeader() {
           {user ? (
             <>
               <NavLink href="/dashboard">Dashboard</NavLink>
+              {isJobSeeker ? <NavLink href="/applications">My applications</NavLink> : null}
               {user.isPlatformAdmin ? <NavLink href="/admin/settings">Admin</NavLink> : null}
               {user.isPlatformAdmin ? <NavLink href="/admin/verifications">Verifications</NavLink> : null}
               <form action={logoutAction}>
@@ -49,7 +53,7 @@ export async function SiteHeader() {
             </>
           )}
         </nav>
-        <MobileNav user={user ? { isPlatformAdmin: user.isPlatformAdmin } : null} />
+        <MobileNav user={user ? { isPlatformAdmin: user.isPlatformAdmin, isJobSeeker } : null} />
       </div>
     </header>
   );
