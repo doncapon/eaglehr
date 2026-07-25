@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(npx eslint *)",
-      "Bash(echo \"EXIT: $?\")"
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)"
     ]
   }
 }
