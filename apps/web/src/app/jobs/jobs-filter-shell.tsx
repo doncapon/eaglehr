@@ -14,9 +14,10 @@ export function JobsFilterShell({ children, ...filterProps }: JobsFilterShellPro
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const resultsRef = useRef<HTMLDivElement>(null);
-  // Filters start open on mobile too (unchanged landing view) — this just adds a way
-  // to collapse them out of the way and bring the results into focus.
-  const [filtersOpen, setFiltersOpen] = useState(true);
+  // Collapsed by default on mobile so results are in focus on landing; the `lg:block`
+  // override in the aside's className keeps this state irrelevant on desktop, where
+  // filters are always shown in the sticky sidebar regardless of this value.
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   function navigate(params: URLSearchParams, options?: { scrollToResults?: boolean }) {
     const qs = params.toString();
