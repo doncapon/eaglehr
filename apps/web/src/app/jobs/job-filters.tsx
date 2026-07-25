@@ -27,7 +27,7 @@ export interface JobFiltersProps {
   maxSalary?: string;
   salaryBuckets: SalaryBucket[];
   hasActiveFilters: boolean;
-  onNavigate: (params: URLSearchParams) => void;
+  onNavigate: (params: URLSearchParams, options?: { scrollToResults?: boolean }) => void;
   isPending: boolean;
 }
 
@@ -96,7 +96,7 @@ export function JobFilters({
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    onNavigate(buildParams(event.currentTarget, selectedBuckets));
+    onNavigate(buildParams(event.currentTarget, selectedBuckets), { scrollToResults: true });
   }
 
   // Checkboxes/selects apply immediately on change, same as before — just via a

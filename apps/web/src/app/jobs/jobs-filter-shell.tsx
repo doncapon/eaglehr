@@ -18,14 +18,18 @@ export function JobsFilterShell({ children, ...filterProps }: JobsFilterShellPro
   // to collapse them out of the way and bring the results into focus.
   const [filtersOpen, setFiltersOpen] = useState(true);
 
-  function navigate(params: URLSearchParams) {
+  function navigate(params: URLSearchParams, options?: { scrollToResults?: boolean }) {
     const qs = params.toString();
     startTransition(() => {
       router.push(qs ? `/jobs?${qs}` : "/jobs", { scroll: false });
     });
-    // Filter controls near the bottom of a long sidebar (mobile especially) can leave
-    // the results scrolled out of view — bring them back in, no-op if already visible.
-    resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    // Only on an explicit "Apply filters" tap, and only on mobile (< lg) — on desktop
+    // the results are already beside the sidebar, and auto-applied checkbox/select
+    // changes shouldn't yank the page around while someone's still picking filters.
+    const isMobileViewport = typeof window !== "undefined" && window.innerWidth < 1024;
+    if (options?.scrollToResults && isMobileViewport) {
+      resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
   }
 
   return (
