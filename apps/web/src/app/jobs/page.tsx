@@ -5,6 +5,7 @@ import Link from "next/link";
 import { StaggerContainer, StaggerItem } from "@/components/animated";
 import { Pagination } from "@/components/pagination";
 import { publicApiFetch } from "@/lib/api";
+import { buildSalaryBuckets } from "@/lib/salary-buckets";
 import { JobsFilterShell } from "./jobs-filter-shell";
 
 interface Job {
@@ -100,6 +101,9 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
     publicApiFetch<FilterFacets>("/jobs/filter-facets"),
   ]);
   const totalPages = Math.max(1, Math.ceil(total / limit));
+  const salaryFloor = Math.floor(salaryRange.minKobo / 100);
+  const salaryCeiling = Math.ceil(salaryRange.maxKobo / 100);
+  const salaryBuckets = buildSalaryBuckets(salaryFloor, salaryCeiling);
   const hasActiveFilters = Boolean(
     params.q ||
       params.state ||
@@ -134,8 +138,7 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
       facets={facets}
       minSalary={params.minSalary}
       maxSalary={params.maxSalary}
-      salaryFloor={Math.floor(salaryRange.minKobo / 100)}
-      salaryCeiling={Math.ceil(salaryRange.maxKobo / 100)}
+      salaryBuckets={salaryBuckets}
       hasActiveFilters={hasActiveFilters}
     >
       <div className="mb-6">
