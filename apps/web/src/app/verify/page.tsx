@@ -1,3 +1,5 @@
+import { ArrowRight } from "lucide-react";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { FadeInUp } from "@/components/animated";
 import { EmailVerificationBanner } from "@/components/email-verification-banner";
@@ -62,6 +64,14 @@ export default async function VerifyPage() {
           hasDocument={Boolean(profile?.idDocumentUrl)}
         />
       )}
+
+      <Link
+        href={isEmployer ? "/dashboard" : "/jobs"}
+        className="flex w-fit items-center gap-1.5 text-sm font-medium text-brand-600 hover:underline dark:text-brand-400"
+      >
+        {isEmployer ? "Continue to dashboard" : "Browse jobs"}
+        <ArrowRight className="h-4 w-4" aria-hidden />
+      </Link>
     </div>
   );
 }
