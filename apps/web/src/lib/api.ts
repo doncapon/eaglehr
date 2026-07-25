@@ -22,6 +22,21 @@ interface RequestOptions extends Omit<RequestInit, "body"> {
   body?: unknown;
 }
 
+/**
+ * Some failure modes (a proxy timeout, a request rejected before it reaches Nest's
+ * JSON error formatting, an oversized-upload rejection) come back as plain text or
+ * HTML instead of JSON. Falling back instead of letting JSON.parse throw keeps
+ * these as a normal catchable ApiError instead of an uncaught server exception.
+ */
+function safeJsonParse(text: string): unknown {
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { message: text.slice(0, 300) };
+  }
+}
+
 async function request<T>(path: string, { token, body, headers, ...rest }: RequestOptions = {}): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     ...rest,
@@ -35,7 +50,7 @@ async function request<T>(path: string, { token, body, headers, ...rest }: Reque
   });
 
   const text = await res.text();
-  const parsed = text ? JSON.parse(text) : null;
+  const parsed = safeJsonParse(text);
 
   if (!res.ok) {
     throw new ApiError(res.status, parsed);
@@ -77,7 +92,7 @@ export async function apiFetchFormData<T>(path: string, formData: FormData): Pro
   });
 
   const text = await res.text();
-  const parsed = text ? JSON.parse(text) : null;
+  const parsed = safeJsonParse(text);
 
   if (!res.ok) {
     throw new ApiError(res.status, parsed);

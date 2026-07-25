@@ -11,7 +11,9 @@ import { diskStorage } from "multer";
 
 const ALLOWED_MIME_TYPES = new Set(["application/pdf", "image/jpeg", "image/png"]);
 
-const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
+// 15MB: phone camera photos of an ID (the common case for this upload) routinely
+// run 8-15MB straight off the camera, well past a desktop-oriented 5MB cap.
+const MAX_FILE_SIZE_BYTES = 15 * 1024 * 1024;
 
 function sanitizeOriginalName(name: string): string {
   return name.replace(/[^a-zA-Z0-9.\-_]/g, "_").slice(-80);
