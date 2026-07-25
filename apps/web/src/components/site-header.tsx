@@ -2,6 +2,7 @@ import { Button } from "@eaglehr/ui";
 import { Feather } from "lucide-react";
 import Link from "next/link";
 import { logoutAction } from "@/lib/auth-actions";
+import { MobileNav } from "@/components/mobile-nav";
 import { getCurrentUser } from "@/lib/session";
 
 function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
@@ -18,14 +19,14 @@ export async function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-gray-200/80 bg-white/80 backdrop-blur-md dark:border-gray-800/80 dark:bg-gray-950/80">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3.5">
+      <div className="relative mx-auto flex max-w-6xl items-center justify-between px-4 py-3.5">
         <Link href="/" className="flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-gray-50">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-brand-600 to-brand-500 text-white shadow-soft">
             <Feather className="h-4 w-4" aria-hidden />
           </span>
           EagleHR
         </Link>
-        <nav className="flex items-center gap-6 text-sm">
+        <nav className="hidden items-center gap-6 text-sm md:flex">
           <NavLink href="/jobs">Find jobs</NavLink>
           <NavLink href="/companies">Companies</NavLink>
           {user ? (
@@ -48,6 +49,7 @@ export async function SiteHeader() {
             </>
           )}
         </nav>
+        <MobileNav user={user ? { isPlatformAdmin: user.isPlatformAdmin } : null} />
       </div>
     </header>
   );
