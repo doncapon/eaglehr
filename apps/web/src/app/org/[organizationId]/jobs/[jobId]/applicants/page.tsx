@@ -1,6 +1,7 @@
 import { APPLICATION_STATUSES } from "@eaglehr/types";
 import { Badge, Button, Card, CardContent, Select } from "@eaglehr/ui";
 import { FileText } from "lucide-react";
+import Link from "next/link";
 import { apiFetch } from "@/lib/api";
 import { updateApplicationStatusAction } from "@/lib/job-actions";
 
@@ -87,6 +88,13 @@ export default async function ApplicantsPage({ params }: ApplicantsPageProps) {
                     Update status
                   </Button>
                 </form>
+                {applicant.status === "HIRED" ? (
+                  <Link href={`/org/${organizationId}/employees/new?applicationId=${applicant.id}`}>
+                    <Button type="button" size="sm" className="w-fit">
+                      Convert to employee
+                    </Button>
+                  </Link>
+                ) : null}
               </CardContent>
             </Card>
           ))}

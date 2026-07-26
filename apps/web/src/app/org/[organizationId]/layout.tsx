@@ -29,8 +29,10 @@ export default async function OrgLayout({ children, params }: OrgLayoutProps) {
   const navItems = [
     { href: `/org/${organizationId}/dashboard`, label: "Dashboard" },
     { href: `/org/${organizationId}/jobs`, label: "Jobs" },
+    { href: `/org/${organizationId}/employees`, label: "Employees" },
     { href: `/org/${organizationId}/team`, label: "Team" },
     { href: `/org/${organizationId}/billing`, label: "Billing" },
+    { href: `/org/${organizationId}/settings`, label: "Settings" },
   ];
 
   return (

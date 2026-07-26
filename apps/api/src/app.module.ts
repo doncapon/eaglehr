@@ -6,6 +6,7 @@ import { ApplicationsModule } from "./applications/applications.module";
 import { AuthModule } from "./auth/auth.module";
 import { JwtAuthGuard } from "./auth/guards/jwt-auth.guard";
 import { BillingModule } from "./billing/billing.module";
+import { EmployeesModule } from "./employees/employees.module";
 import { HealthController } from "./health/health.controller";
 import { JobSeekerProfilesModule } from "./job-seeker-profiles/job-seeker-profiles.module";
 import { JobsModule } from "./jobs/jobs.module";
@@ -23,6 +24,7 @@ import { UsersModule } from "./users/users.module";
     JobSeekerProfilesModule,
     JobsModule,
     ApplicationsModule,
+    EmployeesModule,
     BillingModule,
     AdminModule,
   ],

@@ -183,3 +183,33 @@ export const NIGERIA_STATE_LABELS: Record<NigeriaState, string> = {
   YOBE: "Yobe",
   ZAMFARA: "Zamfara",
 };
+
+export const GENDERS = ["MALE", "FEMALE", "OTHER"] as const;
+export const GenderSchema = z.enum(GENDERS);
+export type Gender = z.infer<typeof GenderSchema>;
+
+export const MARITAL_STATUSES = ["SINGLE", "MARRIED", "DIVORCED", "WIDOWED"] as const;
+export const MaritalStatusSchema = z.enum(MARITAL_STATUSES);
+export type MaritalStatus = z.infer<typeof MaritalStatusSchema>;
+
+export const EMPLOYEE_STATUSES = ["ACTIVE", "ON_LEAVE", "TERMINATED"] as const;
+export const EmployeeStatusSchema = z.enum(EMPLOYEE_STATUSES);
+export type EmployeeStatus = z.infer<typeof EmployeeStatusSchema>;
+
+export const EMPLOYEE_STATUS_LABELS: Record<EmployeeStatus, string> = {
+  ACTIVE: "Active",
+  ON_LEAVE: "On leave",
+  TERMINATED: "Terminated",
+};
+
+export const EMPLOYEE_DOCUMENT_TYPES = ["CONTRACT", "ID_CARD", "CV", "CERTIFICATE", "OTHER"] as const;
+export const EmployeeDocumentTypeSchema = z.enum(EMPLOYEE_DOCUMENT_TYPES);
+export type EmployeeDocumentType = z.infer<typeof EmployeeDocumentTypeSchema>;
+
+export const EMPLOYEE_DOCUMENT_TYPE_LABELS: Record<EmployeeDocumentType, string> = {
+  CONTRACT: "Contract",
+  ID_CARD: "ID card",
+  CV: "CV",
+  CERTIFICATE: "Certificate",
+  OTHER: "Other",
+};

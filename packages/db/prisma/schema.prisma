@@ -82,6 +82,33 @@ enum OrganizationDocumentType {
   REPRESENTATIVE_ID
 }
 
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum MaritalStatus {
+  SINGLE
+  MARRIED
+  DIVORCED
+  WIDOWED
+}
+
+enum EmployeeStatus {
+  ACTIVE
+  ON_LEAVE
+  TERMINATED
+}
+
+enum EmployeeDocumentType {
+  CONTRACT
+  ID_CARD
+  CV
+  CERTIFICATE
+  OTHER
+}
+
 enum BillingInterval {
   MONTHLY
   ANNUAL
@@ -171,6 +198,8 @@ model User {
   createdJobs             Job[]
   emailVerificationTokens EmailVerificationToken[]
   passwordResetTokens     PasswordResetToken[]
+  employeeRecords         Employee[]
+  authoredEmployeeNotes   EmployeeNote[]
 
   @@map("users")
 }
@@ -206,21 +235,28 @@ model PasswordResetToken {
 // ---------------------------------------------------------------------------
 
 model Organization {
-  id                 String             @id @default(uuid())
-  name               String
-  slug               String             @unique
-  rcNumber           String? // CAC registration number
-  industry           String?
-  logoUrl            String?
-  websiteUrl         String?
-  size               OrgSize?
-  isBoosted          Boolean            @default(false)
-  boostExpiresAt     DateTime?
-  verificationStatus VerificationStatus @default(UNVERIFIED)
-  verificationNote   String?
-  verifiedAt         DateTime?
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
+  id                  String             @id @default(uuid())
+  name                String
+  slug                String             @unique
+  rcNumber            String? // CAC registration number
+  industry            String?
+  logoUrl             String?
+  websiteUrl          String?
+  size                OrgSize?
+  addressLine         String?
+  city                String?
+  state               NigeriaState?
+  contactPersonName   String?
+  contactPersonPhone  String?
+  taxId               String? // TIN
+  foundingYear        Int?
+  isBoosted           Boolean            @default(false)
+  boostExpiresAt      DateTime?
+  verificationStatus  VerificationStatus @default(UNVERIFIED)
+  verificationNote    String?
+  verifiedAt          DateTime?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
 
   members               OrganizationMember[]
   invitations           OrganizationInvitation[]
@@ -228,6 +264,7 @@ model Organization {
   subscriptions         Subscription[]
   payments              Payment[]
   verificationDocuments OrganizationVerificationDocument[]
+  employees             Employee[]
 
   @@map("organizations")
 }
@@ -367,10 +404,106 @@ model Application {
 
   job              Job              @relation(fields: [jobId], references: [id], onDelete: Cascade)
   jobSeekerProfile JobSeekerProfile @relation(fields: [jobSeekerProfileId], references: [id], onDelete: Cascade)
+  employee         Employee?
 
   @@unique([jobId, jobSeekerProfileId])
   @@index([jobSeekerProfileId])
   @@map("applications")
+}
+
+// ---------------------------------------------------------------------------
+// Employees (HR records)
+// ---------------------------------------------------------------------------
+
+model Employee {
+  id             String  @id @default(uuid())
+  organizationId String
+  userId         String? // set when converted from a hired application; null for manual entries
+  applicationId  String? @unique // links back to the Application it was converted from
+
+  // Personal
+  firstName     String
+  lastName      String
+  email         String?
+  phone         String?
+  dateOfBirth   DateTime?
+  gender        Gender?
+  maritalStatus MaritalStatus?
+  addressLine   String?
+  city          String?
+  state         NigeriaState?
+
+  // Employment
+  employeeNumber String? // freeform, no auto-numbering
+  department     String?
+  jobTitle       String
+  employmentType EmploymentType
+  startDate      DateTime
+  endDate        DateTime?
+  status         EmployeeStatus @default(ACTIVE)
+  managerId      String?
+
+  // Emergency contact
+  emergencyContactName         String?
+  emergencyContactPhone        String?
+  emergencyContactRelationship String?
+
+  // Next of kin
+  nextOfKinName         String?
+  nextOfKinPhone        String?
+  nextOfKinRelationship String?
+  nextOfKinAddress      String?
+
+  // Bank details — fields only, no payroll processing
+  bankName          String?
+  bankAccountNumber String?
+  bankAccountName   String?
+
+  // Tax + leave
+  taxId            String? // TIN
+  leaveBalanceDays Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization  Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user          User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  application   Application?       @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  manager       Employee?          @relation("EmployeeManager", fields: [managerId], references: [id], onDelete: SetNull)
+  directReports Employee[]         @relation("EmployeeManager")
+  documents     EmployeeDocument[]
+  notes         EmployeeNote[]
+
+  @@index([organizationId])
+  @@index([organizationId, status])
+  @@map("employees")
+}
+
+model EmployeeDocument {
+  id         String               @id @default(uuid())
+  employeeId String
+  type       EmployeeDocumentType
+  fileUrl    String
+  uploadedAt DateTime             @default(now())
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId])
+  @@map("employee_documents")
+}
+
+model EmployeeNote {
+  id           String   @id @default(uuid())
+  employeeId   String
+  authorUserId String
+  body         String
+  createdAt    DateTime @default(now())
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  author   User     @relation(fields: [authorUserId], references: [id])
+
+  @@index([employeeId])
+  @@map("employee_notes")
 }
 
 // ---------------------------------------------------------------------------

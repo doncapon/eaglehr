@@ -1,5 +1,6 @@
 import { ORG_ROLES, type OrgRole } from "@eaglehr/types";
 import { Button, Select } from "@eaglehr/ui";
+import { OrgRoleBadge } from "@/components/org-role-badge";
 import { apiFetch } from "@/lib/api";
 import { removeMemberAction, updateMemberRoleAction } from "@/lib/organization-actions";
 import { InviteMemberForm } from "./invite-member-form";
@@ -29,8 +30,9 @@ export default async function TeamPage({ params }: TeamPageProps) {
         {members.map((member) => (
           <div key={member.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
             <div>
-              <p className="font-medium">
+              <p className="flex items-center gap-2 font-medium">
                 {member.user.firstName} {member.user.lastName}
+                <OrgRoleBadge role={member.role} />
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-400">{member.user.email}</p>
             </div>

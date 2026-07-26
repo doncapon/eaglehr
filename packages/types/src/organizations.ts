@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { OrgIndustrySchema, OrgRoleSchema, OrgSizeSchema } from "./enums";
+import { NigeriaStateSchema, OrgIndustrySchema, OrgRoleSchema, OrgSizeSchema } from "./enums";
 
 export const CreateOrganizationSchema = z.object({
   name: z.string().min(2),
@@ -7,6 +7,13 @@ export const CreateOrganizationSchema = z.object({
   size: OrgSizeSchema.optional(),
   websiteUrl: z.string().url().optional(),
   rcNumber: z.string().optional(),
+  addressLine: z.string().optional(),
+  city: z.string().optional(),
+  state: NigeriaStateSchema.optional(),
+  contactPersonName: z.string().optional(),
+  contactPersonPhone: z.string().optional(),
+  taxId: z.string().optional(),
+  foundingYear: z.number().int().min(1900).max(new Date().getFullYear()).optional(),
 });
 export type CreateOrganizationInput = z.infer<typeof CreateOrganizationSchema>;
 
