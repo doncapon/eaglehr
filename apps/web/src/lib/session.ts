@@ -42,6 +42,24 @@ export interface MyEmployeeRecordSummary {
   jobTitle: string;
   status: string;
   organization: { id: string; name: string };
+  phone: string | null;
+  dateOfBirth: string | null;
+  gender: string | null;
+  maritalStatus: string | null;
+  addressLine: string | null;
+  city: string | null;
+  state: string | null;
+  emergencyContactName: string | null;
+  emergencyContactPhone: string | null;
+  emergencyContactRelationship: string | null;
+  nextOfKinName: string | null;
+  nextOfKinPhone: string | null;
+  nextOfKinRelationship: string | null;
+  nextOfKinAddress: string | null;
+  bankName: string | null;
+  bankAccountNumber: string | null;
+  bankAccountName: string | null;
+  taxId: string | null;
 }
 
 /** Employee records tied to the current user's account (e.g. hired via the platform), for self-service HR features. */

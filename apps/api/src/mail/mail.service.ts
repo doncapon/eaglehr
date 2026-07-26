@@ -21,6 +21,13 @@ interface PasswordResetEmail {
   resetUrl: string;
 }
 
+interface EmployeeOnboardingInviteEmail {
+  to: string;
+  firstName: string;
+  organizationName: string;
+  onboardingUrl: string;
+}
+
 @Injectable()
 export class MailService {
   private readonly logger = new Logger(MailService.name);
@@ -123,6 +130,33 @@ export class MailService {
       // Non-fatal: the token remains valid even if the notification email fails; user can request another.
       this.logger.error(
         `Failed to send password reset email to ${params.to} (link: ${params.resetUrl})`,
+        error instanceof Error ? error.stack : undefined,
+      );
+    }
+  }
+
+  async sendEmployeeOnboardingInvite(params: EmployeeOnboardingInviteEmail): Promise<void> {
+    const { to, subjectPrefix } = this.resolveRecipient(params.to);
+    const subject = `${subjectPrefix}Complete your employee profile at ${params.organizationName}`;
+    const html = `
+      <p>Hi ${params.firstName},</p>
+      <p>${params.organizationName} has added you as an employee on EagleHR. Complete your profile — including your
+      contact, emergency, and bank details — to finish setting up your account.</p>
+      <p><a href="${params.onboardingUrl}">Complete your profile</a></p>
+      <p>This link expires in 7 days.</p>
+    `;
+
+    if (!this.resend) {
+      this.logger.warn(`RESEND_API_KEY not set — skipping onboarding invite email to ${params.to} (link: ${params.onboardingUrl})`);
+      return;
+    }
+
+    try {
+      await this.resend.emails.send({ from: this.from, to, subject, html });
+    } catch (error) {
+      // Non-fatal: the onboarding token remains valid even if the notification email fails.
+      this.logger.error(
+        `Failed to send onboarding invite email to ${params.to} (link: ${params.onboardingUrl})`,
         error instanceof Error ? error.stack : undefined,
       );
     }

@@ -1,22 +1,42 @@
-import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
+import { randomBytes } from "node:crypto";
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import * as bcrypt from "bcryptjs";
 import type {
+  CompleteEmployeeOnboardingInput,
   CreateEmployeeInput,
   CreateEmployeeNoteInput,
   CreateLeaveRequestInput,
   EmployeeDocumentType,
+  EmployeePersonalDetailsInput,
   EmployeeQueryInput,
   LeaveRequestQueryInput,
   ReviewLeaveRequestInput,
   UpdateEmployeeInput,
 } from "@eaglehr/types";
 import { Prisma } from "@eaglehr/db";
+import { AuthService } from "../auth/auth.service";
+import { MailService } from "../mail/mail.service";
 import { PrismaService } from "../prisma/prisma.service";
 
 const EMPLOYEE_DOCUMENT_SUBDIR = "employee-documents";
+const ONBOARDING_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 @Injectable()
 export class EmployeesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly config: ConfigService,
+    private readonly mail: MailService,
+    private readonly auth: AuthService,
+  ) {}
 
   async findOrgEmployeeOrThrow(organizationId: string, employeeId: string) {
     const employee = await this.prisma.employee.findFirst({ where: { id: employeeId, organizationId } });
@@ -188,6 +208,11 @@ export class EmployeesService {
     });
   }
 
+  async updateOwnPersonalDetails(userId: string, employeeId: string, input: EmployeePersonalDetailsInput) {
+    await this.findEmployeeForUserOrThrow(userId, employeeId);
+    return this.prisma.employee.update({ where: { id: employeeId }, data: input });
+  }
+
   private daysRequestedFor(input: CreateLeaveRequestInput): number {
     const msPerDay = 24 * 60 * 60 * 1000;
     return Math.round((input.endDate.getTime() - input.startDate.getTime()) / msPerDay) + 1;
@@ -271,5 +296,111 @@ export class EmployeesService {
       throw new BadRequestException("Only pending leave requests can be cancelled");
     }
     return this.prisma.leaveRequest.update({ where: { id: leaveRequestId }, data: { status: "CANCELLED" } });
+  }
+
+  /** HR sends a self-service onboarding link so the employee fills in their own
+   * personal/sensitive fields, instead of HR guessing or typing them on their behalf. */
+  async createOnboardingInvite(organizationId: string, employeeId: string) {
+    const employee = await this.findOrgEmployeeOrThrow(organizationId, employeeId);
+    if (employee.userId) {
+      throw new ConflictException("This employee is already linked to an account");
+    }
+    if (!employee.email) {
+      throw new BadRequestException("Add an email address for this employee before sending an onboarding invite");
+    }
+
+    const token = randomBytes(24).toString("hex");
+    const onboardingTokenExpiresAt = new Date(Date.now() + ONBOARDING_TTL_MS);
+    await this.prisma.employee.update({
+      where: { id: employeeId },
+      data: { onboardingToken: token, onboardingTokenExpiresAt, onboardingCompletedAt: null },
+    });
+
+    const organization = await this.prisma.organization.findUniqueOrThrow({ where: { id: organizationId } });
+    const webAppUrl = this.config.get<string>("WEB_APP_URL") ?? "http://localhost:3000";
+    await this.mail.sendEmployeeOnboardingInvite({
+      to: employee.email,
+      firstName: employee.firstName,
+      organizationName: organization.name,
+      onboardingUrl: `${webAppUrl}/employee-onboarding/${token}`,
+    });
+
+    return { sent: true };
+  }
+
+  private async findByOnboardingTokenOrThrow(token: string) {
+    const employee = await this.prisma.employee.findUnique({ where: { onboardingToken: token } });
+    if (!employee) {
+      throw new NotFoundException("This onboarding link is invalid or has already been used");
+    }
+    if (employee.onboardingCompletedAt) {
+      throw new ConflictException("This onboarding link has already been used");
+    }
+    if (!employee.onboardingTokenExpiresAt || employee.onboardingTokenExpiresAt < new Date()) {
+      throw new BadRequestException("This onboarding link has expired. Ask HR to send a new one");
+    }
+    return employee;
+  }
+
+  async getOnboardingInfo(token: string) {
+    const employee = await this.findByOnboardingTokenOrThrow(token);
+    const organization = await this.prisma.organization.findUniqueOrThrow({ where: { id: employee.organizationId } });
+    return {
+      firstName: employee.firstName,
+      lastName: employee.lastName,
+      jobTitle: employee.jobTitle,
+      organizationName: organization.name,
+    };
+  }
+
+  async completeOnboarding(token: string, input: CompleteEmployeeOnboardingInput) {
+    const employee = await this.findByOnboardingTokenOrThrow(token);
+    // Guaranteed non-null: createOnboardingInvite refuses to issue a token without one.
+    const email = employee.email as string;
+
+    const existingUser = await this.prisma.user.findUnique({ where: { email } });
+    let userId: string;
+    if (existingUser) {
+      const passwordMatches = await bcrypt.compare(input.password, existingUser.passwordHash);
+      if (!passwordMatches) {
+        throw new UnauthorizedException("Incorrect password for the existing account with this email");
+      }
+      userId = existingUser.id;
+    } else {
+      const passwordHash = await bcrypt.hash(input.password, 12);
+      const newUser = await this.prisma.user.create({
+        data: { email, passwordHash, firstName: employee.firstName, lastName: employee.lastName },
+      });
+      userId = newUser.id;
+    }
+
+    await this.prisma.employee.update({
+      where: { id: employee.id },
+      data: {
+        userId,
+        phone: input.phone,
+        dateOfBirth: input.dateOfBirth,
+        gender: input.gender,
+        maritalStatus: input.maritalStatus,
+        addressLine: input.addressLine,
+        city: input.city,
+        state: input.state,
+        emergencyContactName: input.emergencyContactName,
+        emergencyContactPhone: input.emergencyContactPhone,
+        emergencyContactRelationship: input.emergencyContactRelationship,
+        nextOfKinName: input.nextOfKinName,
+        nextOfKinPhone: input.nextOfKinPhone,
+        nextOfKinRelationship: input.nextOfKinRelationship,
+        nextOfKinAddress: input.nextOfKinAddress,
+        bankName: input.bankName,
+        bankAccountNumber: input.bankAccountNumber,
+        bankAccountName: input.bankAccountName,
+        taxId: input.taxId,
+        onboardingCompletedAt: new Date(),
+        onboardingToken: null,
+      },
+    });
+
+    return this.auth.issueTokensForUser(userId, email);
   }
 }

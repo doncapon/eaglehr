@@ -5,6 +5,7 @@ import { LeaveStatusBadge } from "@/components/leave-status-badge";
 import { apiFetch } from "@/lib/api";
 import { getCurrentUser, getMyEmployeeRecords } from "@/lib/session";
 import { CancelLeaveRequestButton } from "./cancel-leave-request-button";
+import { EmployeeDetailsForm } from "./employee-details-form";
 import { LeaveRequestForm } from "./leave-request-form";
 
 interface MyLeaveRequest {
@@ -49,6 +50,11 @@ export default async function EmploymentPage() {
               <p className="text-sm text-gray-500 dark:text-gray-400">{employee.jobTitle}</p>
             </div>
             <EmployeeStatusBadge status={employee.status as EmployeeStatus} />
+          </div>
+
+          <div>
+            <h2 className="mb-2 text-sm font-semibold">My details</h2>
+            <EmployeeDetailsForm employeeId={employee.id} employee={employee} />
           </div>
 
           <div>

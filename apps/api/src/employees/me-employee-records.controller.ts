@@ -1,5 +1,10 @@
 import { Body, Controller, Get, Param, Patch, Post } from "@nestjs/common";
-import { CreateLeaveRequestSchema, type CreateLeaveRequestInput } from "@eaglehr/types";
+import {
+  CreateLeaveRequestSchema,
+  EmployeePersonalDetailsSchema,
+  type CreateLeaveRequestInput,
+  type EmployeePersonalDetailsInput,
+} from "@eaglehr/types";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import type { JwtPayload } from "../auth/strategies/jwt.strategy";
 import { ZodValidationPipe } from "../common/pipes/zod-validation.pipe";
@@ -12,6 +17,15 @@ export class MeEmployeeRecordsController {
   @Get()
   mine(@CurrentUser() user: JwtPayload) {
     return this.employeesService.listMyEmployeeRecords(user.sub);
+  }
+
+  @Patch(":employeeId")
+  updatePersonalDetails(
+    @CurrentUser() user: JwtPayload,
+    @Param("employeeId") employeeId: string,
+    @Body(new ZodValidationPipe(EmployeePersonalDetailsSchema)) body: EmployeePersonalDetailsInput,
+  ) {
+    return this.employeesService.updateOwnPersonalDetails(user.sub, employeeId, body);
   }
 
   @Get(":employeeId/leave-requests")

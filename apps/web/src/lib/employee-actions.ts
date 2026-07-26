@@ -19,11 +19,9 @@ function employeeFieldsFromForm(formData: FormData) {
     firstName: formData.get("firstName"),
     lastName: formData.get("lastName"),
     email: fieldOf(formData, "email"),
+    // Only present (and only meaningful) when converting a hired application —
+    // the form hides these inputs for manual entries.
     phone: fieldOf(formData, "phone"),
-    dateOfBirth: fieldOf(formData, "dateOfBirth"),
-    gender: fieldOf(formData, "gender"),
-    maritalStatus: fieldOf(formData, "maritalStatus"),
-    addressLine: fieldOf(formData, "addressLine"),
     city: fieldOf(formData, "city"),
     state: fieldOf(formData, "state"),
 
@@ -36,20 +34,6 @@ function employeeFieldsFromForm(formData: FormData) {
     status: fieldOf(formData, "status"),
     endDate: fieldOf(formData, "endDate"),
 
-    emergencyContactName: fieldOf(formData, "emergencyContactName"),
-    emergencyContactPhone: fieldOf(formData, "emergencyContactPhone"),
-    emergencyContactRelationship: fieldOf(formData, "emergencyContactRelationship"),
-
-    nextOfKinName: fieldOf(formData, "nextOfKinName"),
-    nextOfKinPhone: fieldOf(formData, "nextOfKinPhone"),
-    nextOfKinRelationship: fieldOf(formData, "nextOfKinRelationship"),
-    nextOfKinAddress: fieldOf(formData, "nextOfKinAddress"),
-
-    bankName: fieldOf(formData, "bankName"),
-    bankAccountNumber: fieldOf(formData, "bankAccountNumber"),
-    bankAccountName: fieldOf(formData, "bankAccountName"),
-
-    taxId: fieldOf(formData, "taxId"),
     leaveBalanceDays: fieldOf(formData, "leaveBalanceDays") ? Number(formData.get("leaveBalanceDays")) : undefined,
   };
 }
@@ -184,4 +168,20 @@ export async function reviewLeaveRequestAction(
   revalidatePath(`/org/${organizationId}/employees/${employeeId}`);
   revalidatePath(`/org/${organizationId}/leave`);
   return { success: status === "APPROVED" ? "Approved." : "Rejected." };
+}
+
+export async function sendOnboardingInviteAction(
+  organizationId: string,
+  employeeId: string,
+  _prevState: ActionState | undefined,
+  _formData: FormData,
+): Promise<ActionState> {
+  try {
+    await apiFetch(`/organizations/${organizationId}/employees/${employeeId}/onboarding-invite`, { method: "POST" });
+  } catch (err) {
+    return { error: err instanceof ApiError ? err.message : "Failed to send onboarding invite." };
+  }
+
+  revalidatePath(`/org/${organizationId}/employees/${employeeId}`);
+  return { success: "Onboarding invite sent." };
 }

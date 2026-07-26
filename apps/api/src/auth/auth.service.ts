@@ -147,6 +147,12 @@ export class AuthService {
     return this.issueTokens(user.id, email);
   }
 
+  /** Public entry point for other modules (e.g. employee-onboarding completion) that need to
+   * log a user in immediately after an action, without duplicating the JWT-signing logic. */
+  issueTokensForUser(userId: string, email: string) {
+    return this.issueTokens(userId, email);
+  }
+
   private issueTokens(userId: string, email: string) {
     const payload = { sub: userId, email };
 

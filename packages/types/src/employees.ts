@@ -63,3 +63,38 @@ export const EmployeeQuerySchema = z.object({
   status: EmployeeStatusSchema.optional(),
 });
 export type EmployeeQueryInput = z.infer<typeof EmployeeQuerySchema>;
+
+/** The personal/sensitive fields HR shouldn't be the one typing in — filled by the employee
+ * themself, either at onboarding or later via self-service editing on their "My employment" page. */
+export const EmployeePersonalDetailsSchema = z.object({
+  phone: z.string().optional(),
+  dateOfBirth: z.coerce.date().optional(),
+  gender: GenderSchema.optional(),
+  maritalStatus: MaritalStatusSchema.optional(),
+  addressLine: z.string().optional(),
+  city: z.string().optional(),
+  state: NigeriaStateSchema.optional(),
+
+  emergencyContactName: z.string().optional(),
+  emergencyContactPhone: z.string().optional(),
+  emergencyContactRelationship: z.string().optional(),
+
+  nextOfKinName: z.string().optional(),
+  nextOfKinPhone: z.string().optional(),
+  nextOfKinRelationship: z.string().optional(),
+  nextOfKinAddress: z.string().optional(),
+
+  bankName: z.string().optional(),
+  bankAccountNumber: z.string().optional(),
+  bankAccountName: z.string().optional(),
+
+  taxId: z.string().optional(),
+});
+export type EmployeePersonalDetailsInput = z.infer<typeof EmployeePersonalDetailsSchema>;
+
+/** Submitted via the onboarding link — the personal-detail fields above, plus a password to
+ * create (or verify) the employee's EagleHR account. */
+export const CompleteEmployeeOnboardingSchema = EmployeePersonalDetailsSchema.extend({
+  password: z.string().min(8, "Password must be at least 8 characters"),
+});
+export type CompleteEmployeeOnboardingInput = z.infer<typeof CompleteEmployeeOnboardingSchema>;

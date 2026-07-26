@@ -142,4 +142,11 @@ export class OrganizationEmployeesController {
   ) {
     return this.employeesService.reviewLeaveRequest(organizationId, employeeId, leaveRequestId, user.sub, body);
   }
+
+  @Post(":employeeId/onboarding-invite")
+  @UseGuards(RolesGuard)
+  @Roles("OWNER", "ADMIN")
+  sendOnboardingInvite(@Param("organizationId") organizationId: string, @Param("employeeId") employeeId: string) {
+    return this.employeesService.createOnboardingInvite(organizationId, employeeId);
+  }
 }

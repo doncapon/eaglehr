@@ -481,6 +481,12 @@ model Employee {
   taxId            String? // TIN
   leaveBalanceDays Int     @default(0)
 
+  // Self-service onboarding: HR creates the record with employment fields only,
+  // then invites the employee to fill in their own personal/sensitive fields.
+  onboardingToken          String?   @unique
+  onboardingTokenExpiresAt DateTime?
+  onboardingCompletedAt    DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

@@ -7,9 +7,11 @@ import { emptyEmployeeFormValues, EmployeeForm, type EmployeeFormValues } from "
 import { EmployeeDocumentForm } from "./employee-document-form";
 import { EmployeeNoteForm } from "./employee-note-form";
 import { LeaveRequestReviewForm } from "./leave-request-review-form";
+import { OnboardingInviteButton } from "./onboarding-invite-button";
 
 interface EmployeeDetail {
   id: string;
+  userId: string | null;
   firstName: string;
   lastName: string;
   email: string | null;
@@ -40,6 +42,7 @@ interface EmployeeDetail {
   bankAccountName: string | null;
   taxId: string | null;
   leaveBalanceDays: number;
+  onboardingTokenExpiresAt: string | null;
   documents: { id: string; type: EmployeeDocumentType; uploadedAt: string }[];
   notes: { id: string; body: string; createdAt: string; author: { firstName: string; lastName: string } }[];
   leaveRequests: {
@@ -85,10 +88,6 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailPageP
     lastName: employee.lastName,
     email: employee.email ?? "",
     phone: employee.phone ?? "",
-    dateOfBirth: toDateInputValue(employee.dateOfBirth),
-    gender: employee.gender ?? "",
-    maritalStatus: employee.maritalStatus ?? "",
-    addressLine: employee.addressLine ?? "",
     city: employee.city ?? "",
     state: employee.state ?? "",
     employeeNumber: employee.employeeNumber ?? "",
@@ -99,19 +98,31 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailPageP
     managerId: employee.managerId ?? "",
     status: employee.status,
     endDate: toDateInputValue(employee.endDate),
-    emergencyContactName: employee.emergencyContactName ?? "",
-    emergencyContactPhone: employee.emergencyContactPhone ?? "",
-    emergencyContactRelationship: employee.emergencyContactRelationship ?? "",
-    nextOfKinName: employee.nextOfKinName ?? "",
-    nextOfKinPhone: employee.nextOfKinPhone ?? "",
-    nextOfKinRelationship: employee.nextOfKinRelationship ?? "",
-    nextOfKinAddress: employee.nextOfKinAddress ?? "",
-    bankName: employee.bankName ?? "",
-    bankAccountNumber: employee.bankAccountNumber ?? "",
-    bankAccountName: employee.bankAccountName ?? "",
-    taxId: employee.taxId ?? "",
     leaveBalanceDays: String(employee.leaveBalanceDays),
   };
+
+  const personalDetailRows: [string, string | null][] = [
+    ["Date of birth", employee.dateOfBirth ? new Date(employee.dateOfBirth).toLocaleDateString() : null],
+    ["Gender", employee.gender],
+    ["Marital status", employee.maritalStatus],
+    ["Address", employee.addressLine],
+    ["Emergency contact", employee.emergencyContactName && employee.emergencyContactPhone
+      ? `${employee.emergencyContactName} (${employee.emergencyContactRelationship ?? "relationship not given"}) · ${employee.emergencyContactPhone}`
+      : null],
+    ["Next of kin", employee.nextOfKinName
+      ? `${employee.nextOfKinName} (${employee.nextOfKinRelationship ?? "relationship not given"}) · ${employee.nextOfKinPhone ?? "no phone"}`
+      : null],
+    ["Bank details", employee.bankName
+      ? `${employee.bankName} · ${employee.bankAccountNumber ?? "no account number"} · ${employee.bankAccountName ?? ""}`
+      : null],
+    ["Tax ID", employee.taxId],
+  ];
+  const hasAnyPersonalDetail = personalDetailRows.some(([, value]) => value);
+
+  const onboardingInviteExpired = employee.onboardingTokenExpiresAt
+    ? new Date(employee.onboardingTokenExpiresAt) < new Date()
+    : false;
+  const onboardingInvitePending = Boolean(employee.onboardingTokenExpiresAt) && !onboardingInviteExpired;
 
   return (
     <div className="flex flex-col gap-8">
@@ -129,6 +140,56 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailPageP
         showStatus
         submitLabel="Save changes"
       />
+
+      <div className="flex flex-col gap-3 rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+        <h2 className="font-semibold">Onboarding</h2>
+        {employee.userId ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Linked to an EagleHR account — this employee can log in and manage their own leave requests.
+          </p>
+        ) : onboardingInvitePending ? (
+          <div className="flex flex-col gap-2">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Invite sent to {employee.email} — awaiting completion.
+            </p>
+            <OnboardingInviteButton organizationId={organizationId} employeeId={employeeId} label="Resend invite" />
+          </div>
+        ) : !employee.email ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Add an email address above and save, then you can invite this employee to fill in their own profile.
+          </p>
+        ) : (
+          <div className="flex flex-col gap-2">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {onboardingInviteExpired
+                ? "The previous invite expired."
+                : "This employee hasn't been invited to complete their profile yet."}
+            </p>
+            <OnboardingInviteButton organizationId={organizationId} employeeId={employeeId} label="Send onboarding invite" />
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-3 rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+        <h2 className="font-semibold">Personal details</h2>
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          Filled in by the employee themselves — read-only here.
+        </p>
+        {hasAnyPersonalDetail ? (
+          <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+            {personalDetailRows
+              .filter(([, value]) => value)
+              .map(([label, value]) => (
+                <div key={label}>
+                  <dt className="text-xs text-gray-500 dark:text-gray-400">{label}</dt>
+                  <dd className="text-gray-700 dark:text-gray-300">{value}</dd>
+                </div>
+              ))}
+          </dl>
+        ) : (
+          <p className="text-sm text-gray-500 dark:text-gray-400">Not filled in yet.</p>
+        )}
+      </div>
 
       <div className="flex flex-col gap-3 rounded-lg border border-gray-200 p-4 dark:border-gray-800">
         <h2 className="font-semibold">Documents</h2>

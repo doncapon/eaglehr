@@ -1,15 +1,7 @@
 "use client";
 
-import {
-  EMPLOYEE_STATUSES,
-  EMPLOYEE_STATUS_LABELS,
-  EMPLOYMENT_TYPES,
-  GENDERS,
-  MARITAL_STATUSES,
-  NIGERIA_STATE_LABELS,
-  NIGERIA_STATES,
-} from "@eaglehr/types";
-import { Button, Input, Label, Select, Textarea } from "@eaglehr/ui";
+import { EMPLOYEE_STATUSES, EMPLOYEE_STATUS_LABELS, EMPLOYMENT_TYPES, NIGERIA_STATE_LABELS, NIGERIA_STATES } from "@eaglehr/types";
+import { Button, Input, Label, Select } from "@eaglehr/ui";
 import { useActionState, useState, type ChangeEvent } from "react";
 import type { ActionState } from "@/lib/organization-actions";
 
@@ -17,11 +9,9 @@ export interface EmployeeFormValues {
   firstName: string;
   lastName: string;
   email: string;
+  // Only carried over (and only shown) when converting a hired application — the
+  // applicant already gave us these, so it isn't HR entering someone else's details.
   phone: string;
-  dateOfBirth: string;
-  gender: string;
-  maritalStatus: string;
-  addressLine: string;
   city: string;
   state: string;
   employeeNumber: string;
@@ -32,17 +22,6 @@ export interface EmployeeFormValues {
   managerId: string;
   status: string;
   endDate: string;
-  emergencyContactName: string;
-  emergencyContactPhone: string;
-  emergencyContactRelationship: string;
-  nextOfKinName: string;
-  nextOfKinPhone: string;
-  nextOfKinRelationship: string;
-  nextOfKinAddress: string;
-  bankName: string;
-  bankAccountNumber: string;
-  bankAccountName: string;
-  taxId: string;
   leaveBalanceDays: string;
 }
 
@@ -51,10 +30,6 @@ export const emptyEmployeeFormValues: EmployeeFormValues = {
   lastName: "",
   email: "",
   phone: "",
-  dateOfBirth: "",
-  gender: "",
-  maritalStatus: "",
-  addressLine: "",
   city: "",
   state: "",
   employeeNumber: "",
@@ -65,17 +40,6 @@ export const emptyEmployeeFormValues: EmployeeFormValues = {
   managerId: "",
   status: "ACTIVE",
   endDate: "",
-  emergencyContactName: "",
-  emergencyContactPhone: "",
-  emergencyContactRelationship: "",
-  nextOfKinName: "",
-  nextOfKinPhone: "",
-  nextOfKinRelationship: "",
-  nextOfKinAddress: "",
-  bankName: "",
-  bankAccountNumber: "",
-  bankAccountName: "",
-  taxId: "",
   leaveBalanceDays: "",
 };
 
@@ -131,49 +95,33 @@ export function EmployeeForm({ action, defaultValues, applicationId, managers, s
         <Field id="email" label="Email">
           <Input id="email" name="email" type="email" value={values.email} onChange={handleChange} />
         </Field>
-        <Field id="phone" label="Phone">
-          <Input id="phone" name="phone" value={values.phone} onChange={handleChange} />
-        </Field>
-        <Field id="dateOfBirth" label="Date of birth">
-          <Input id="dateOfBirth" name="dateOfBirth" type="date" value={values.dateOfBirth} onChange={handleChange} />
-        </Field>
-        <Field id="gender" label="Gender">
-          <Select id="gender" name="gender" value={values.gender} onChange={handleChange}>
-            <option value="">Not specified</option>
-            {GENDERS.map((g) => (
-              <option key={g} value={g}>
-                {g}
-              </option>
-            ))}
-          </Select>
-        </Field>
-        <Field id="maritalStatus" label="Marital status">
-          <Select id="maritalStatus" name="maritalStatus" value={values.maritalStatus} onChange={handleChange}>
-            <option value="">Not specified</option>
-            {MARITAL_STATUSES.map((m) => (
-              <option key={m} value={m}>
-                {m}
-              </option>
-            ))}
-          </Select>
-        </Field>
-        <Field id="addressLine" label="Address">
-          <Input id="addressLine" name="addressLine" value={values.addressLine} onChange={handleChange} />
-        </Field>
-        <Field id="city" label="City">
-          <Input id="city" name="city" value={values.city} onChange={handleChange} />
-        </Field>
-        <Field id="state" label="State">
-          <Select id="state" name="state" value={values.state} onChange={handleChange}>
-            <option value="">Not specified</option>
-            {NIGERIA_STATES.map((s) => (
-              <option key={s} value={s}>
-                {NIGERIA_STATE_LABELS[s]}
-              </option>
-            ))}
-          </Select>
-        </Field>
+        {applicationId ? (
+          <>
+            <Field id="phone" label="Phone">
+              <Input id="phone" name="phone" value={values.phone} onChange={handleChange} />
+            </Field>
+            <Field id="city" label="City">
+              <Input id="city" name="city" value={values.city} onChange={handleChange} />
+            </Field>
+            <Field id="state" label="State">
+              <Select id="state" name="state" value={values.state} onChange={handleChange}>
+                <option value="">Not specified</option>
+                {NIGERIA_STATES.map((s) => (
+                  <option key={s} value={s}>
+                    {NIGERIA_STATE_LABELS[s]}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          </>
+        ) : null}
       </Section>
+      {!applicationId ? (
+        <p className="-mt-2 text-xs text-gray-500 dark:text-gray-400">
+          Address, emergency contact, next of kin, and bank details are filled in by the employee themselves — send them
+          an onboarding invite once this record is saved.
+        </p>
+      ) : null}
 
       <Section title="Employment">
         <Field id="jobTitle" label="Job title">
@@ -228,80 +176,7 @@ export function EmployeeForm({ action, defaultValues, applicationId, managers, s
         ) : null}
       </Section>
 
-      <Section title="Emergency contact">
-        <Field id="emergencyContactName" label="Name">
-          <Input
-            id="emergencyContactName"
-            name="emergencyContactName"
-            value={values.emergencyContactName}
-            onChange={handleChange}
-          />
-        </Field>
-        <Field id="emergencyContactPhone" label="Phone">
-          <Input
-            id="emergencyContactPhone"
-            name="emergencyContactPhone"
-            value={values.emergencyContactPhone}
-            onChange={handleChange}
-          />
-        </Field>
-        <Field id="emergencyContactRelationship" label="Relationship">
-          <Input
-            id="emergencyContactRelationship"
-            name="emergencyContactRelationship"
-            value={values.emergencyContactRelationship}
-            onChange={handleChange}
-          />
-        </Field>
-      </Section>
-
-      <Section title="Next of kin">
-        <Field id="nextOfKinName" label="Name">
-          <Input id="nextOfKinName" name="nextOfKinName" value={values.nextOfKinName} onChange={handleChange} />
-        </Field>
-        <Field id="nextOfKinPhone" label="Phone">
-          <Input id="nextOfKinPhone" name="nextOfKinPhone" value={values.nextOfKinPhone} onChange={handleChange} />
-        </Field>
-        <Field id="nextOfKinRelationship" label="Relationship">
-          <Input
-            id="nextOfKinRelationship"
-            name="nextOfKinRelationship"
-            value={values.nextOfKinRelationship}
-            onChange={handleChange}
-          />
-        </Field>
-        <Field id="nextOfKinAddress" label="Address">
-          <Textarea
-            id="nextOfKinAddress"
-            name="nextOfKinAddress"
-            value={values.nextOfKinAddress}
-            onChange={handleChange}
-            rows={2}
-          />
-        </Field>
-      </Section>
-
-      <Section title="Bank details">
-        <Field id="bankName" label="Bank name">
-          <Input id="bankName" name="bankName" value={values.bankName} onChange={handleChange} />
-        </Field>
-        <Field id="bankAccountNumber" label="Account number">
-          <Input
-            id="bankAccountNumber"
-            name="bankAccountNumber"
-            value={values.bankAccountNumber}
-            onChange={handleChange}
-          />
-        </Field>
-        <Field id="bankAccountName" label="Account name">
-          <Input id="bankAccountName" name="bankAccountName" value={values.bankAccountName} onChange={handleChange} />
-        </Field>
-      </Section>
-
-      <Section title="Tax &amp; leave">
-        <Field id="taxId" label="Tax ID (TIN)">
-          <Input id="taxId" name="taxId" value={values.taxId} onChange={handleChange} />
-        </Field>
+      <Section title="Leave">
         <Field id="leaveBalanceDays" label="Leave balance (days)">
           <Input
             id="leaveBalanceDays"

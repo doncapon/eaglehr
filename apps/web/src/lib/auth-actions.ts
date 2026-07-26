@@ -13,12 +13,12 @@ export interface AuthFormState {
   showForgotPasswordHint?: boolean;
 }
 
-interface AuthTokens {
+export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
 }
 
-async function setAuthCookies(tokens: AuthTokens) {
+export async function setAuthCookies(tokens: AuthTokens) {
   const store = await cookies();
   // Decoupled from NODE_ENV: `next start` sets NODE_ENV=production even when
   // served over plain HTTP on localhost, and a `secure` cookie is silently
