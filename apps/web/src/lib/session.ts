@@ -36,3 +36,19 @@ export const getMyOrganizations = cache(async (): Promise<OrganizationSummary[]>
     return [];
   }
 });
+
+export interface MyEmployeeRecordSummary {
+  id: string;
+  jobTitle: string;
+  status: string;
+  organization: { id: string; name: string };
+}
+
+/** Employee records tied to the current user's account (e.g. hired via the platform), for self-service HR features. */
+export const getMyEmployeeRecords = cache(async (): Promise<MyEmployeeRecordSummary[]> => {
+  try {
+    return await apiFetch<MyEmployeeRecordSummary[]>("/me/employee-records");
+  } catch {
+    return [];
+  }
+});

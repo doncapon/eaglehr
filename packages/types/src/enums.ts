@@ -213,3 +213,27 @@ export const EMPLOYEE_DOCUMENT_TYPE_LABELS: Record<EmployeeDocumentType, string>
   CERTIFICATE: "Certificate",
   OTHER: "Other",
 };
+
+export const LEAVE_TYPES = ["ANNUAL", "SICK", "MATERNITY", "PATERNITY", "UNPAID", "OTHER"] as const;
+export const LeaveTypeSchema = z.enum(LEAVE_TYPES);
+export type LeaveType = z.infer<typeof LeaveTypeSchema>;
+
+export const LEAVE_TYPE_LABELS: Record<LeaveType, string> = {
+  ANNUAL: "Annual",
+  SICK: "Sick",
+  MATERNITY: "Maternity",
+  PATERNITY: "Paternity",
+  UNPAID: "Unpaid",
+  OTHER: "Other",
+};
+
+export const LEAVE_REQUEST_STATUSES = ["PENDING", "APPROVED", "REJECTED", "CANCELLED"] as const;
+export const LeaveRequestStatusSchema = z.enum(LEAVE_REQUEST_STATUSES);
+export type LeaveRequestStatus = z.infer<typeof LeaveRequestStatusSchema>;
+
+export const LEAVE_REQUEST_STATUS_LABELS: Record<LeaveRequestStatus, string> = {
+  PENDING: "Pending",
+  APPROVED: "Approved",
+  REJECTED: "Rejected",
+  CANCELLED: "Cancelled",
+};

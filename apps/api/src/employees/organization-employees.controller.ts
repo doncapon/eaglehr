@@ -17,11 +17,13 @@ import {
   CreateEmployeeSchema,
   EmployeeDocumentTypeSchema,
   EmployeeQuerySchema,
+  ReviewLeaveRequestSchema,
   UpdateEmployeeSchema,
   type CreateEmployeeInput,
   type CreateEmployeeNoteInput,
   type EmployeeDocumentType,
   type EmployeeQueryInput,
+  type ReviewLeaveRequestInput,
   type UpdateEmployeeInput,
 } from "@eaglehr/types";
 import type { Response } from "express";
@@ -120,5 +122,24 @@ export class OrganizationEmployeesController {
   ) {
     const { subdir, filename } = await this.employeesService.getDocumentPath(organizationId, employeeId, documentId);
     res.download(verificationFilePath(subdir, filename));
+  }
+
+  @Get(":employeeId/leave-requests")
+  async listLeaveRequests(@Param("organizationId") organizationId: string, @Param("employeeId") employeeId: string) {
+    await this.employeesService.findOrgEmployeeOrThrow(organizationId, employeeId);
+    return this.employeesService.listLeaveRequestsForEmployee(employeeId);
+  }
+
+  @Patch(":employeeId/leave-requests/:leaveRequestId")
+  @UseGuards(RolesGuard)
+  @Roles("OWNER", "ADMIN")
+  reviewLeaveRequest(
+    @CurrentUser() user: JwtPayload,
+    @Param("organizationId") organizationId: string,
+    @Param("employeeId") employeeId: string,
+    @Param("leaveRequestId") leaveRequestId: string,
+    @Body(new ZodValidationPipe(ReviewLeaveRequestSchema)) body: ReviewLeaveRequestInput,
+  ) {
+    return this.employeesService.reviewLeaveRequest(organizationId, employeeId, leaveRequestId, user.sub, body);
   }
 }

@@ -1,6 +1,6 @@
 "use server";
 
-import { CreateEmployeeNoteSchema, CreateEmployeeSchema, UpdateEmployeeSchema } from "@eaglehr/types";
+import { CreateEmployeeNoteSchema, CreateEmployeeSchema, ReviewLeaveRequestSchema, UpdateEmployeeSchema } from "@eaglehr/types";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ApiError, apiFetch, apiFetchFormData, friendlyUploadError } from "./api";
@@ -154,4 +154,34 @@ export async function uploadEmployeeDocumentAction(
 
   revalidatePath(`/org/${organizationId}/employees/${employeeId}`);
   return { success: "Uploaded." };
+}
+
+export async function reviewLeaveRequestAction(
+  organizationId: string,
+  employeeId: string,
+  leaveRequestId: string,
+  status: "APPROVED" | "REJECTED",
+  _prevState: ActionState | undefined,
+  formData: FormData,
+): Promise<ActionState> {
+  const parsed = ReviewLeaveRequestSchema.safeParse({
+    status,
+    reviewNote: formData.get("reviewNote") || undefined,
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Please check the review details." };
+  }
+
+  try {
+    await apiFetch(`/organizations/${organizationId}/employees/${employeeId}/leave-requests/${leaveRequestId}`, {
+      method: "PATCH",
+      body: parsed.data,
+    });
+  } catch (err) {
+    return { error: err instanceof ApiError ? err.message : "Failed to review leave request." };
+  }
+
+  revalidatePath(`/org/${organizationId}/employees/${employeeId}`);
+  revalidatePath(`/org/${organizationId}/leave`);
+  return { success: status === "APPROVED" ? "Approved." : "Rejected." };
 }

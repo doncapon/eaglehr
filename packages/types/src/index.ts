@@ -5,6 +5,7 @@ export * from "./organizations";
 export * from "./jobs";
 export * from "./applications";
 export * from "./employees";
+export * from "./leave";
 export * from "./profiles";
 export * from "./billing";
 export * from "./admin";

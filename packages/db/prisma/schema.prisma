@@ -109,6 +109,22 @@ enum EmployeeDocumentType {
   OTHER
 }
 
+enum LeaveType {
+  ANNUAL
+  SICK
+  MATERNITY
+  PATERNITY
+  UNPAID
+  OTHER
+}
+
+enum LeaveRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
 enum BillingInterval {
   MONTHLY
   ANNUAL
@@ -200,6 +216,8 @@ model User {
   passwordResetTokens     PasswordResetToken[]
   employeeRecords         Employee[]
   authoredEmployeeNotes   EmployeeNote[]
+  requestedLeaves         LeaveRequest[] @relation("LeaveRequestedBy")
+  reviewedLeaves          LeaveRequest[] @relation("LeaveReviewedBy")
 
   @@map("users")
 }
@@ -473,6 +491,7 @@ model Employee {
   directReports Employee[]         @relation("EmployeeManager")
   documents     EmployeeDocument[]
   notes         EmployeeNote[]
+  leaveRequests LeaveRequest[]
 
   @@index([organizationId])
   @@index([organizationId, status])
@@ -504,6 +523,31 @@ model EmployeeNote {
 
   @@index([employeeId])
   @@map("employee_notes")
+}
+
+model LeaveRequest {
+  id                String              @id @default(uuid())
+  employeeId        String
+  type              LeaveType
+  startDate         DateTime
+  endDate           DateTime
+  daysRequested     Int
+  reason            String?
+  status            LeaveRequestStatus  @default(PENDING)
+  requestedByUserId String
+  reviewedByUserId  String?
+  reviewedAt        DateTime?
+  reviewNote        String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  requestedBy User     @relation("LeaveRequestedBy", fields: [requestedByUserId], references: [id])
+  reviewedBy  User?    @relation("LeaveReviewedBy", fields: [reviewedByUserId], references: [id])
+
+  @@index([employeeId])
+  @@index([employeeId, status])
+  @@map("leave_requests")
 }
 
 // ---------------------------------------------------------------------------

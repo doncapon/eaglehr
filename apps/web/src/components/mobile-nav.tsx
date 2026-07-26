@@ -10,6 +10,7 @@ import { logoutAction } from "@/lib/auth-actions";
 interface MobileNavUser {
   isPlatformAdmin: boolean;
   isJobSeeker: boolean;
+  hasEmployeeRecords: boolean;
 }
 
 const linkClass =
@@ -66,6 +67,11 @@ export function MobileNav({ user }: { user: MobileNavUser | null }) {
                 {user.isJobSeeker ? (
                   <Link href="/applications" className={linkClass}>
                     My applications
+                  </Link>
+                ) : null}
+                {user.hasEmployeeRecords ? (
+                  <Link href="/employment" className={linkClass}>
+                    My employment
                   </Link>
                 ) : null}
                 {user.isPlatformAdmin ? (

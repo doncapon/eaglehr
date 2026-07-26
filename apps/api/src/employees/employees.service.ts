@@ -1,9 +1,12 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import type {
   CreateEmployeeInput,
   CreateEmployeeNoteInput,
+  CreateLeaveRequestInput,
   EmployeeDocumentType,
   EmployeeQueryInput,
+  LeaveRequestQueryInput,
+  ReviewLeaveRequestInput,
   UpdateEmployeeInput,
 } from "@eaglehr/types";
 import { Prisma } from "@eaglehr/db";
@@ -50,6 +53,13 @@ export class EmployeesService {
         manager: { select: { id: true, firstName: true, lastName: true } },
         documents: { orderBy: { uploadedAt: "desc" } },
         notes: { orderBy: { createdAt: "desc" }, include: { author: { select: { firstName: true, lastName: true } } } },
+        leaveRequests: {
+          orderBy: { createdAt: "desc" },
+          include: {
+            requestedBy: { select: { firstName: true, lastName: true } },
+            reviewedBy: { select: { firstName: true, lastName: true } },
+          },
+        },
       },
     });
     if (!employee) {
@@ -159,5 +169,107 @@ export class EmployeesService {
       throw new NotFoundException("Document not found");
     }
     return { subdir: EMPLOYEE_DOCUMENT_SUBDIR, filename: document.fileUrl };
+  }
+
+  /** Employee record for a logged-in user, e.g. for self-service leave requests. Not scoped to an organization. */
+  async findEmployeeForUserOrThrow(userId: string, employeeId: string) {
+    const employee = await this.prisma.employee.findFirst({ where: { id: employeeId, userId } });
+    if (!employee) {
+      throw new NotFoundException("Employee record not found");
+    }
+    return employee;
+  }
+
+  listMyEmployeeRecords(userId: string) {
+    return this.prisma.employee.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      include: { organization: { select: { id: true, name: true } } },
+    });
+  }
+
+  private daysRequestedFor(input: CreateLeaveRequestInput): number {
+    const msPerDay = 24 * 60 * 60 * 1000;
+    return Math.round((input.endDate.getTime() - input.startDate.getTime()) / msPerDay) + 1;
+  }
+
+  createLeaveRequest(employeeId: string, requestedByUserId: string, input: CreateLeaveRequestInput) {
+    return this.prisma.leaveRequest.create({
+      data: {
+        employeeId,
+        requestedByUserId,
+        type: input.type,
+        startDate: input.startDate,
+        endDate: input.endDate,
+        reason: input.reason,
+        daysRequested: this.daysRequestedFor(input),
+      },
+    });
+  }
+
+  listLeaveRequestsForEmployee(employeeId: string) {
+    return this.prisma.leaveRequest.findMany({
+      where: { employeeId },
+      orderBy: { createdAt: "desc" },
+      include: {
+        requestedBy: { select: { firstName: true, lastName: true } },
+        reviewedBy: { select: { firstName: true, lastName: true } },
+      },
+    });
+  }
+
+  async listOrgLeaveRequests(organizationId: string, query: LeaveRequestQueryInput) {
+    return this.prisma.leaveRequest.findMany({
+      where: {
+        employee: { organizationId },
+        ...(query.status ? { status: query.status } : {}),
+      },
+      orderBy: { createdAt: "desc" },
+      include: {
+        employee: { select: { id: true, firstName: true, lastName: true } },
+        requestedBy: { select: { firstName: true, lastName: true } },
+        reviewedBy: { select: { firstName: true, lastName: true } },
+      },
+    });
+  }
+
+  async reviewLeaveRequest(
+    organizationId: string,
+    employeeId: string,
+    leaveRequestId: string,
+    reviewerUserId: string,
+    input: ReviewLeaveRequestInput,
+  ) {
+    await this.findOrgEmployeeOrThrow(organizationId, employeeId);
+    const leaveRequest = await this.prisma.leaveRequest.findFirst({ where: { id: leaveRequestId, employeeId } });
+    if (!leaveRequest) {
+      throw new NotFoundException("Leave request not found");
+    }
+    if (leaveRequest.status !== "PENDING") {
+      throw new BadRequestException("Only pending leave requests can be reviewed");
+    }
+    return this.prisma.leaveRequest.update({
+      where: { id: leaveRequestId },
+      data: {
+        status: input.status,
+        reviewedByUserId: reviewerUserId,
+        reviewedAt: new Date(),
+        reviewNote: input.reviewNote,
+      },
+    });
+  }
+
+  async cancelLeaveRequest(employeeId: string, requestingUserId: string, leaveRequestId: string) {
+    const leaveRequest = await this.prisma.leaveRequest.findFirst({ where: { id: leaveRequestId, employeeId } });
+    if (!leaveRequest) {
+      throw new NotFoundException("Leave request not found");
+    }
+    if (leaveRequest.requestedByUserId !== requestingUserId) {
+      throw new ForbiddenException("You can only cancel your own leave requests");
+    }
+    if (leaveRequest.status !== "PENDING") {
+      throw new BadRequestException("Only pending leave requests can be cancelled");
+    }
+    return this.prisma.leaveRequest.update({ where: { id: leaveRequestId }, data: { status: "CANCELLED" } });
   }
 }

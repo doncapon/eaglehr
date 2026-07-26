@@ -30,6 +30,7 @@ export default async function OrgLayout({ children, params }: OrgLayoutProps) {
     { href: `/org/${organizationId}/dashboard`, label: "Dashboard" },
     { href: `/org/${organizationId}/jobs`, label: "Jobs" },
     { href: `/org/${organizationId}/employees`, label: "Employees" },
+    { href: `/org/${organizationId}/leave`, label: "Leave" },
     { href: `/org/${organizationId}/team`, label: "Team" },
     { href: `/org/${organizationId}/billing`, label: "Billing" },
     { href: `/org/${organizationId}/settings`, label: "Settings" },

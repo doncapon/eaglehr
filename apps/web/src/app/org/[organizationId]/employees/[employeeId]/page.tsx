@@ -1,10 +1,12 @@
-import { EMPLOYEE_DOCUMENT_TYPE_LABELS, type EmployeeDocumentType } from "@eaglehr/types";
+import { EMPLOYEE_DOCUMENT_TYPE_LABELS, LEAVE_TYPE_LABELS, type EmployeeDocumentType, type LeaveRequestStatus, type LeaveType } from "@eaglehr/types";
 import { FileText } from "lucide-react";
+import { LeaveStatusBadge } from "@/components/leave-status-badge";
 import { apiFetch } from "@/lib/api";
 import { updateEmployeeAction } from "@/lib/employee-actions";
 import { emptyEmployeeFormValues, EmployeeForm, type EmployeeFormValues } from "../employee-form";
 import { EmployeeDocumentForm } from "./employee-document-form";
 import { EmployeeNoteForm } from "./employee-note-form";
+import { LeaveRequestReviewForm } from "./leave-request-review-form";
 
 interface EmployeeDetail {
   id: string;
@@ -40,6 +42,18 @@ interface EmployeeDetail {
   leaveBalanceDays: number;
   documents: { id: string; type: EmployeeDocumentType; uploadedAt: string }[];
   notes: { id: string; body: string; createdAt: string; author: { firstName: string; lastName: string } }[];
+  leaveRequests: {
+    id: string;
+    type: LeaveType;
+    startDate: string;
+    endDate: string;
+    daysRequested: number;
+    reason: string | null;
+    status: LeaveRequestStatus;
+    reviewNote: string | null;
+    requestedBy: { firstName: string; lastName: string };
+    reviewedBy: { firstName: string; lastName: string } | null;
+  }[];
 }
 
 interface ManagerOption {
@@ -157,6 +171,45 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailPageP
           </ul>
         )}
         <EmployeeNoteForm organizationId={organizationId} employeeId={employeeId} />
+      </div>
+
+      <div className="flex flex-col gap-3 rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+        <h2 className="font-semibold">Leave requests</h2>
+        {employee.leaveRequests.length === 0 ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400">No leave requests yet.</p>
+        ) : (
+          <ul className="flex flex-col gap-4">
+            {employee.leaveRequests.map((leaveRequest) => (
+              <li key={leaveRequest.id} className="flex flex-col gap-2 text-sm">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="font-medium">
+                    {LEAVE_TYPE_LABELS[leaveRequest.type]} · {new Date(leaveRequest.startDate).toLocaleDateString()} –{" "}
+                    {new Date(leaveRequest.endDate).toLocaleDateString()} ({leaveRequest.daysRequested} day
+                    {leaveRequest.daysRequested === 1 ? "" : "s"})
+                  </p>
+                  <LeaveStatusBadge status={leaveRequest.status} />
+                </div>
+                {leaveRequest.reason ? <p className="text-gray-700 dark:text-gray-300">{leaveRequest.reason}</p> : null}
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Requested by {leaveRequest.requestedBy.firstName} {leaveRequest.requestedBy.lastName}
+                  {leaveRequest.reviewedBy
+                    ? ` · Reviewed by ${leaveRequest.reviewedBy.firstName} ${leaveRequest.reviewedBy.lastName}`
+                    : ""}
+                </p>
+                {leaveRequest.reviewNote ? (
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Note: {leaveRequest.reviewNote}</p>
+                ) : null}
+                {leaveRequest.status === "PENDING" ? (
+                  <LeaveRequestReviewForm
+                    organizationId={organizationId}
+                    employeeId={employeeId}
+                    leaveRequestId={leaveRequest.id}
+                  />
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );
