@@ -53,8 +53,8 @@ export async function generateMetadata({ params }: CompanyPageProps): Promise<Me
   const company = await getCompany(slug);
   if (!company) return {};
   return {
-    title: `${company.name} | EagleHR`,
-    description: `${company.jobs.length} open role${company.jobs.length === 1 ? "" : "s"} at ${company.name} on EagleHR.`,
+    title: `${company.name} | EagleHire`,
+    description: `${company.jobs.length} open role${company.jobs.length === 1 ? "" : "s"} at ${company.name} on EagleHire.`,
   };
 }
 

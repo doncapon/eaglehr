@@ -93,7 +93,7 @@ export const EmployeePersonalDetailsSchema = z.object({
 export type EmployeePersonalDetailsInput = z.infer<typeof EmployeePersonalDetailsSchema>;
 
 /** Submitted via the onboarding link — the personal-detail fields above, plus a password to
- * create (or verify) the employee's EagleHR account. */
+ * create (or verify) the employee's EagleHire account. */
 export const CompleteEmployeeOnboardingSchema = EmployeePersonalDetailsSchema.extend({
   password: z.string().min(8, "Password must be at least 8 characters"),
 });

@@ -2,6 +2,7 @@ import { Button } from "@eaglehr/ui";
 import { Feather } from "lucide-react";
 import Link from "next/link";
 import { logoutAction } from "@/lib/auth-actions";
+import { EagleHireWordmark } from "@/components/eaglehire-wordmark";
 import { MobileNav } from "@/components/mobile-nav";
 import { getCurrentUser, getMyEmployeeRecords, getMyOrganizations } from "@/lib/session";
 
@@ -24,11 +25,11 @@ export async function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-gray-200/80 bg-white/80 backdrop-blur-md dark:border-gray-800/80 dark:bg-gray-950/80">
       <div className="relative mx-auto flex max-w-6xl items-center justify-between px-4 py-3.5">
-        <Link href="/" className="flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-gray-50">
+        <Link href="/" className="flex items-center gap-2 text-lg text-gray-900 dark:text-gray-50">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-brand-600 to-brand-500 text-white shadow-soft">
             <Feather className="h-4 w-4" aria-hidden />
           </span>
-          EagleHR
+          <EagleHireWordmark />
         </Link>
         <nav className="hidden items-center gap-6 text-sm md:flex">
           <NavLink href="/jobs">Find jobs</NavLink>

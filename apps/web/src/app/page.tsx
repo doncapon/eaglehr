@@ -107,7 +107,7 @@ export default async function HomePage() {
 
           <FadeInUp delay={0.16}>
             <p className="max-w-xl text-lg text-gray-600 dark:text-gray-400">
-              EagleHR connects employers and job seekers across Nigeria — post jobs, manage applicants, and run your
+              EagleHire connects employers and job seekers across Nigeria — post jobs, manage applicants, and run your
               company&apos;s HR from one private workspace.
             </p>
           </FadeInUp>
@@ -225,7 +225,7 @@ export default async function HomePage() {
       {/* How it works */}
       <section className="flex flex-col gap-10">
         <FadeInUp className="mx-auto max-w-xl text-center">
-          <h2 className="text-3xl font-bold sm:text-4xl">How hiring works on EagleHR</h2>
+          <h2 className="text-3xl font-bold sm:text-4xl">How hiring works on EagleHire</h2>
         </FadeInUp>
 
         <StaggerContainer className="grid gap-8 sm:grid-cols-3">

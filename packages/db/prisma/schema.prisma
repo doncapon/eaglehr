@@ -1,4 +1,4 @@
-// EagleHR — MVP domain model (job board + billing).
+// EagleHire — MVP domain model (job board + billing).
 // Multi-tenancy is enforced at the NestJS guard layer via `organizationId`
 // on every org-scoped table, not Postgres RLS. RLS is a candidate hardening
 // step once sensitive HRIS/payroll data lands in a later phase.

@@ -36,7 +36,7 @@ export default async function EmployeeOnboardingPage({ params }: EmployeeOnboard
           Welcome to {info.organizationName}, {info.firstName}
         </h1>
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          You&apos;ve been added as {info.jobTitle}. Complete your profile below to set up your EagleHR account.
+          You&apos;ve been added as {info.jobTitle}. Complete your profile below to set up your EagleHire account.
         </p>
       </div>
 

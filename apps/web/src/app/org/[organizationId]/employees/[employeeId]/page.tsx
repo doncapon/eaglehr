@@ -145,7 +145,7 @@ export default async function EmployeeDetailPage({ params }: EmployeeDetailPageP
         <h2 className="font-semibold">Onboarding</h2>
         {employee.userId ? (
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Linked to an EagleHR account — this employee can log in and manage their own leave requests.
+            Linked to an EagleHire account — this employee can log in and manage their own leave requests.
           </p>
         ) : onboardingInvitePending ? (
           <div className="flex flex-col gap-2">

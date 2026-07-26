@@ -57,7 +57,7 @@ export default async function CompaniesPage({ searchParams }: CompaniesPageProps
           <span className="bg-gradient-to-r from-brand-600 to-accent-500 bg-clip-text text-transparent dark:from-brand-400 dark:to-accent-400">
             hiring
           </span>{" "}
-          on EagleHR
+          on EagleHire
         </h1>
         <p className="text-sm text-gray-500 dark:text-gray-400">
           <span className="font-semibold text-brand-600 dark:text-brand-400">{total}</span> compan

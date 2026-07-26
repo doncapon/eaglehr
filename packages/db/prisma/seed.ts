@@ -1130,7 +1130,7 @@ async function main() {
     create: {
       email: "admin@eaglehr.ng",
       passwordHash,
-      firstName: "EagleHR",
+      firstName: "EagleHire",
       lastName: "Admin",
       isEmailVerified: true,
       isPlatformAdmin: true,

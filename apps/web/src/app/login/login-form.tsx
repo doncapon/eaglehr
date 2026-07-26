@@ -36,7 +36,7 @@ export function LoginForm() {
       <FadeInUp className="flex w-full max-w-sm flex-col gap-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Sign in</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Welcome back to EagleHR.</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Welcome back to EagleHire.</p>
         </div>
         {justRegistered ? (
           <p className="rounded-md bg-brand-50 px-3 py-2 text-sm text-brand-700 dark:bg-brand-950 dark:text-brand-300">

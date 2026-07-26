@@ -44,7 +44,7 @@ export async function generateMetadata({ params }: JobDetailPageProps): Promise<
   const job = await getJob(slug);
   if (!job) return {};
   return {
-    title: `${job.title} at ${job.organization.name} | EagleHR`,
+    title: `${job.title} at ${job.organization.name} | EagleHire`,
     description: job.description.slice(0, 160),
   };
 }

@@ -19,7 +19,7 @@ async function bootstrap() {
   // Railway injects PORT at runtime; API_PORT stays as the local-dev override.
   const port = Number(process.env.PORT ?? process.env.API_PORT ?? 4000);
   await app.listen(port, "0.0.0.0");
-  console.log(`EagleHR API listening on port ${port}`);
+  console.log(`EagleHire API listening on port ${port}`);
 }
 
 bootstrap();

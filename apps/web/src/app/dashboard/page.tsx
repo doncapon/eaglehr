@@ -205,7 +205,7 @@ async function AdminDashboard({ firstName }: { firstName: string }) {
     <div className="flex flex-col gap-8">
       <FadeInUp>
         <h1 className="text-3xl font-bold tracking-tight">Welcome back, {firstName}</h1>
-        <p className="text-gray-500 dark:text-gray-400">Platform administration for EagleHR.</p>
+        <p className="text-gray-500 dark:text-gray-400">Platform administration for EagleHire.</p>
       </FadeInUp>
 
       <StaggerContainer className="grid gap-5 sm:grid-cols-3">

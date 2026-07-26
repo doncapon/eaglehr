@@ -37,7 +37,7 @@ export function CompleteOnboardingForm({ token }: { token: string }) {
           <PasswordInput id="confirmPassword" name="confirmPassword" required autoComplete="new-password" />
         </Field>
         <p className="text-xs text-gray-500 dark:text-gray-400 sm:col-span-2">
-          If you already have an EagleHR account with this email, enter its password to link this employee record to
+          If you already have an EagleHire account with this email, enter its password to link this employee record to
           it instead of creating a new one.
         </p>
       </Section>

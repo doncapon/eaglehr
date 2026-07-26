@@ -66,7 +66,7 @@ export async function getAccessToken(): Promise<string | undefined> {
   return store.get(ACCESS_COOKIE)?.value;
 }
 
-/** Authenticated server-side request to the EagleHR API, using the caller's session cookie. */
+/** Authenticated server-side request to the EagleHire API, using the caller's session cookie. */
 export async function apiFetch<T>(path: string, options?: RequestOptions): Promise<T> {
   const token = await getAccessToken();
   return request<T>(path, { ...options, token });

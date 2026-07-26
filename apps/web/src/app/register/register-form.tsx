@@ -31,7 +31,7 @@ export function RegisterForm() {
   return (
     <AuthShell
       tone={accountType === "company" ? "accent" : "brand"}
-      title={accountType === "company" ? "Hire on EagleHR." : "Join EagleHR."}
+      title={accountType === "company" ? "Hire on EagleHire." : "Join EagleHire."}
       subtitle={
         accountType === "company"
           ? "Set up your company's private hiring workspace in minutes."

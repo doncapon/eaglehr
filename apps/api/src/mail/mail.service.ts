@@ -2,6 +2,9 @@ import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { Resend } from "resend";
 
+/** "EagleHire" with the H and r bolded, for use in HTML email bodies (subjects stay plain text). */
+const WORDMARK_HTML = "Eagle<b>H</b>i<b>r</b>e";
+
 interface OrganizationInvitationEmail {
   to: string;
   organizationName: string;
@@ -38,7 +41,7 @@ export class MailService {
   constructor(private readonly config: ConfigService) {
     const apiKey = this.config.get<string>("RESEND_API_KEY");
     this.resend = apiKey ? new Resend(apiKey) : null;
-    this.from = this.config.get<string>("MAIL_FROM") ?? "EagleHR <no-reply@eaglehr.ng>";
+    this.from = this.config.get<string>("MAIL_FROM") ?? "EagleHire <no-reply@eaglehr.ng>";
     // Resend's sandbox mode (no verified sending domain yet) only delivers to the
     // account owner's own address. Until a domain is verified, redirect every send
     // there instead of letting Resend silently reject real recipients.
@@ -55,10 +58,10 @@ export class MailService {
 
   async sendOrganizationInvitation(params: OrganizationInvitationEmail): Promise<void> {
     const { to, subjectPrefix } = this.resolveRecipient(params.to);
-    const subject = `${subjectPrefix}You're invited to join ${params.organizationName} on EagleHR`;
+    const subject = `${subjectPrefix}You're invited to join ${params.organizationName} on EagleHire`;
     const html = `
       <p>Hi,</p>
-      <p>${params.inviterName} invited you to join <strong>${params.organizationName}</strong>'s HR workspace on EagleHR.</p>
+      <p>${params.inviterName} invited you to join <strong>${params.organizationName}</strong>'s HR workspace on ${WORDMARK_HTML}.</p>
       <p><a href="${params.acceptUrl}">Accept invitation</a></p>
       <p>This invitation expires in 7 days.</p>
     `;
@@ -83,10 +86,10 @@ export class MailService {
 
   async sendEmailVerification(params: EmailVerificationEmail): Promise<void> {
     const { to, subjectPrefix } = this.resolveRecipient(params.to);
-    const subject = `${subjectPrefix}Verify your email address for EagleHR`;
+    const subject = `${subjectPrefix}Verify your email address for EagleHire`;
     const html = `
       <p>Hi ${params.firstName},</p>
-      <p>Thanks for signing up for EagleHR. Please confirm your email address to get started.</p>
+      <p>Thanks for signing up for ${WORDMARK_HTML}. Please confirm your email address to get started.</p>
       <p><a href="${params.verifyUrl}">Verify my email</a></p>
       <p>This link expires in 24 hours.</p>
     `;
@@ -111,10 +114,10 @@ export class MailService {
 
   async sendPasswordReset(params: PasswordResetEmail): Promise<void> {
     const { to, subjectPrefix } = this.resolveRecipient(params.to);
-    const subject = `${subjectPrefix}Reset your EagleHR password`;
+    const subject = `${subjectPrefix}Reset your EagleHire password`;
     const html = `
       <p>Hi ${params.firstName},</p>
-      <p>We received a request to reset your EagleHR password. If this was you, click below to choose a new one.</p>
+      <p>We received a request to reset your ${WORDMARK_HTML} password. If this was you, click below to choose a new one.</p>
       <p><a href="${params.resetUrl}">Reset my password</a></p>
       <p>This link expires in 1 hour. If you didn't request this, you can safely ignore this email.</p>
     `;
@@ -140,7 +143,7 @@ export class MailService {
     const subject = `${subjectPrefix}Complete your employee profile at ${params.organizationName}`;
     const html = `
       <p>Hi ${params.firstName},</p>
-      <p>${params.organizationName} has added you as an employee on EagleHR. Complete your profile — including your
+      <p>${params.organizationName} has added you as an employee on ${WORDMARK_HTML}. Complete your profile — including your
       contact, emergency, and bank details — to finish setting up your account.</p>
       <p><a href="${params.onboardingUrl}">Complete your profile</a></p>
       <p>This link expires in 7 days.</p>

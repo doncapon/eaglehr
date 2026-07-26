@@ -1,5 +1,6 @@
 import { CheckCircle2, Feather } from "lucide-react";
 import type { ReactNode } from "react";
+import { EagleHireWordmark } from "@/components/eaglehire-wordmark";
 
 interface AuthShellProps {
   children: ReactNode;
@@ -53,11 +54,11 @@ export function AuthShell({ children, title, subtitle, bullets, tone = "brand" }
           className={`pointer-events-none absolute right-1/4 top-1/3 h-40 w-40 animate-float rounded-full blur-3xl [animation-delay:3.5s] ${styles.blurA}`}
         />
 
-        <div className="relative z-10 flex items-center gap-2 text-lg font-bold">
+        <div className="relative z-10 flex items-center gap-2 text-lg">
           <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/15 shadow-soft backdrop-blur">
             <Feather className="h-4 w-4" aria-hidden />
           </span>
-          EagleHR
+          <EagleHireWordmark />
         </div>
 
         <div className="relative z-10 flex flex-col gap-6">

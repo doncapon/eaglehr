@@ -10,7 +10,7 @@ module.exports = {
           200: "#aad7ac",
           300: "#7ec27f",
           400: "#53ad55",
-          500: "#2f8f32", // EagleHR primary green
+          500: "#2f8f32", // EagleHire primary green
           600: "#257226",
           700: "#1c561d",
           800: "#123915",
