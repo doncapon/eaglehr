@@ -3,6 +3,7 @@ import { ArrowRight, Briefcase, ClipboardCheck, ShieldCheck, UserCheck, Users2, 
 import Link from "next/link";
 import { FadeInUp, StaggerContainer, StaggerItem } from "@/components/animated";
 import { publicApiFetch } from "@/lib/api";
+import { getCurrentUser } from "@/lib/session";
 
 const features = [
   {
@@ -62,7 +63,7 @@ async function getStats() {
 }
 
 export default async function HomePage() {
-  const { jobTotal, companyTotal, industries } = await getStats();
+  const [{ jobTotal, companyTotal, industries }, user] = await Promise.all([getStats(), getCurrentUser()]);
 
   return (
     <div className="flex flex-col gap-28 pb-16">
@@ -119,9 +120,9 @@ export default async function HomePage() {
                   <ArrowRight className="h-4 w-4 transition-transform duration-200 ease-out-expo group-hover:translate-x-1" aria-hidden />
                 </Button>
               </Link>
-              <Link href="/register" className="group">
+              <Link href={user ? "/dashboard" : "/register"} className="group">
                 <Button size="lg" variant="outline" className="gap-1.5 border-2">
-                  Post a job as an employer
+                  {user ? "Go to dashboard" : "Post a job as an employer"}
                   <ArrowRight className="h-4 w-4 transition-transform duration-200 ease-out-expo group-hover:translate-x-1" aria-hidden />
                 </Button>
               </Link>
@@ -261,18 +262,22 @@ export default async function HomePage() {
             aria-hidden
             className="pointer-events-none absolute -top-10 left-10 h-40 w-40 animate-float rounded-full bg-white/10 blur-3xl [animation-delay:2s]"
           />
-          <h2 className="relative text-3xl font-bold sm:text-4xl">Ready to build your team?</h2>
+          <h2 className="relative text-3xl font-bold sm:text-4xl">
+            {user ? "Pick up where you left off" : "Ready to build your team?"}
+          </h2>
           <p className="relative mx-auto mt-2 max-w-lg text-brand-50">
-            Create your company&apos;s private workspace and post your first job today.
+            {user
+              ? "Head back to your dashboard to manage jobs, applicants, and HR."
+              : "Create your company's private workspace and post your first job today."}
           </p>
           <div className="relative mt-6 flex flex-wrap items-center justify-center gap-4">
-            <Link href="/register" className="group">
+            <Link href={user ? "/dashboard" : "/register"} className="group">
               <Button
                 size="lg"
                 variant="outline"
                 className="gap-1.5 border-white bg-white text-brand-700 shadow-lift hover:bg-brand-50"
               >
-                Get started for free
+                {user ? "Go to dashboard" : "Get started for free"}
                 <ArrowRight className="h-4 w-4 transition-transform duration-200 ease-out-expo group-hover:translate-x-1" aria-hidden />
               </Button>
             </Link>
